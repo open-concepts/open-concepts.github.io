@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS SageMaker AI: From 10-Year-Old to Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Kitchen Tech (Beige/Cream background, AWS Orange/Blue accents, dark slate text) -->
+    <!-- Application Structure Plan: 
+         The SPA uses a "Master Kitchen" dashboard layout. Because SageMaker is a massive, complex pipeline, mirroring a standard document would be overwhelming. 
+         Instead, I've designed an interactive "Pipeline Visualizer". Users click through the stages of Machine Learning (Prep, Build, Train, Deploy, Monitor). 
+         Each stage updates a dynamic content area below. 
+         Within each content area, information is split into two visual tiers: "The 10-Year-Old Analogy" (conceptual understanding using a restaurant kitchen metaphor) and "The Pro Console" (deep-dive technical configurations, instance types, and parameters required for real-world usage). 
+         This structure bridges basic comprehension with expert application seamlessly.
+    -->
+    <!-- Visualization & Content Choices: 
+         1. Interactive Pipeline Menu: HTML/CSS flexbox (NO SVG). Goal: Organize the ML lifecycle. Interaction: Click to load stage details. Justification: Spatial memory aids learning complex workflows.
+         2. Hyperparameter Tuning Chart: Chart.js scatter plot. Goal: Explain Autopilot/Tuning visually. Interaction: Hover for details. Justification: Shows how SageMaker tests different "recipes" (configurations) to find the highest accuracy.
+         3. Configuration Data Grids: Tailwind Grid. Goal: Display pro-level parameters. Interaction: Scroll/Read. Justification: Easy to scan technical options.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FDFBF7; /* Warm off-white */
+            color: #1E293B; /* Slate 800 */
+            overflow-x: hidden;
+        }
+        .code-font {
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Prevents stretching on large screens */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Controlled height */
+            max-height: 400px;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #E2E8F0;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px; /* Smaller height on mobile */
+            }
+        }
+
+        /* Pipeline Step Styling */
+        .pipeline-step {
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .pipeline-step.active {
+            border-bottom: 4px solid #F97316; /* AWS Orange */
+            background-color: #FFF7ED;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .analogy-card {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border-left: 6px solid #F59E0B;
+        }
+        .pro-card {
+            background: #F8FAFC;
+            border-left: 6px solid #3B82F6; /* Tech Blue */
+            border: 1px solid #E2E8F0;
+        }
+
+        /* CSS Shapes for icons */
+        .shape-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .bg-aws-orange { background-color: #FF9900; color: white;}
+        .bg-aws-blue { background-color: #232F3E; color: white;}
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-[#232F3E] text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="shape-circle bg-aws-orange font-bold">🧠</div>
+                <h1 class="text-2xl font-extrabold tracking-tight">AWS SageMaker AI <span class="text-orange-400 font-light hidden sm:inline">| The Master Kitchen</span></h1>
+            </div>
+            <div class="text-sm font-semibold bg-gray-700 px-3 py-1 rounded-full border border-gray-600">
+                Kid ➡️ Pro Guide
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Introduction -->
+        <section class="mb-12 text-center max-w-4xl mx-auto">
+            <h2 class="text-4xl font-extrabold mb-4 text-gray-900">What is AWS SageMaker?</h2>
+            <p class="text-xl text-gray-600 mb-6 leading-relaxed">
+                Imagine you want to open the greatest restaurant in the world. You need to prep ingredients, invent recipes, cook the food, serve it fast, and make sure it always tastes good. 
+                <br><br>
+                <strong class="text-blue-600">AWS SageMaker is that giant, automated Master Kitchen, but for Artificial Intelligence (AI) and Machine Learning (ML).</strong> It gives you every single tool you need to take raw data (ingredients), train an AI model (cook the recipe), and let computers around the world use it (serve the food).
+            </p>
+        </section>
+
+        <!-- Interactive Pipeline Navigation -->
+        <div class="mb-8">
+            <h3 class="text-lg font-bold text-gray-500 uppercase tracking-wider mb-4 text-center">The Machine Learning Lifecycle</h3>
+            <div class="flex flex-wrap md:flex-nowrap justify-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-200" id="pipeline-nav">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+
+        <!-- Dynamic Content Area -->
+        <div id="content-area" class="min-h-[600px] transition-opacity duration-300">
+            <!-- Content will be injected here by JS -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 py-8 border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 font-medium">
+            <p>Designed for complete understanding. Remember: Machine Learning is just finding patterns in ingredients to bake the perfect cake.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- Data Storage: The Content for the SPA ---
+        const sagemakerData = {
+            prep: {
+                id: 'prep',
+                icon: '🥬',
+                title: '1. Prepare (Data Prep)',
+                subtitle: 'Getting the Ingredients Ready',
+                analogy: `
+                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
+                    <p class="text-amber-900 mb-2">Before you cook, you need to buy groceries, wash the vegetables, chop them up, and throw away the rotten ones. If you try to bake a cake with rotten eggs, the cake will be terrible! Sometimes, you even need helpers to put labels on jars so you know what's inside (e.g., "This is sugar, this is salt").</p>
+                    <p class="text-amber-900 font-semibold">In AI, this is called Data Preparation. Your AI model is only as smart as the data you feed it.</p>
+                `,
+                proTools: [
+                    {
+                        name: 'SageMaker Ground Truth',
+                        type: 'Data Labeling Service',
+                        desc: 'Used when you have raw data (like images of cars) but need them labeled (e.g., bounding boxes saying "Toyota", "Ford") so the AI can learn what they look like.',
+                        options: [
+                            { name: 'Workforce Options', detail: 'Amazon Mechanical Turk (public crowd), Private (your employees), or Vendor (3rd party experts).' },
+                            { name: 'Task Types', detail: 'Image classification, Object detection (bounding boxes), Text classification, Semantic segmentation.' },
+                            { name: 'Automated Data Labeling', detail: 'Uses Active Learning. It trains a mini-model to label easy data automatically, sending only the hard ones to humans. Saves 70% of costs.' }
+                        ]
+                    },
+                    {
+                        name: 'SageMaker Data Wrangler',
+                        type: 'Visual Data Preparation',
+                        desc: 'The ultimate prep station. Connect to data sources, clean it, and transform it without writing thousands of lines of code.',
+                        options: [
+                            { name: 'Data Sources', detail: 'Import directly from Amazon S3, Amazon Athena, Redshift, or Snowflake.' },
+                            { name: 'Built-in Transforms', detail: 'Over 300+ clicks-not-code transformations (e.g., drop missing values, one-hot encode text, scale numbers 0 to 1).' },
+                            { name: 'Data Quality Insights', detail: 'Automatically detects "Target Leakage" (when the answer is accidentally hidden in the training data).' },
+                            { name: 'Export', detail: 'Exports your steps as a Python script, SageMaker Pipeline, or Feature Store group.' }
+                        ]
+                    },
+                    {
+                        name: 'SageMaker Feature Store',
+                        type: 'Centralized Ingredient Fridge',
+                        desc: 'A purpose-built repository to store, update, and retrieve machine learning features (cleaned data bits) so different teams don\'t have to clean the same data twice.',
+                        options: [
+                            { name: 'Online Store', detail: 'Ultra-low latency (<10ms) for real-time predictions. Stored in memory.' },
+                            { name: 'Offline Store', detail: 'Appended to Amazon S3. Used for batch training on massive historical datasets.' },
+                            { name: 'Time Travel', detail: 'Allows you to extract data exactly as it looked at a specific point in the past to ensure fair training.' }
+                        ]
+                    }
+                ]
+            },
+            build: {
+                id: 'build',
+                icon: '🍳',
+                title: '2. Build (The Lab)',
+                subtitle: 'Writing the Recipe',
+                analogy: `
+                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
+                    <p class="text-amber-900 mb-2">Now you are in your private test kitchen. You have your cutting board, your recipe book, and your utensils. You start writing down exactly how to mix the ingredients. Sometimes you use a recipe your grandma gave you (a built-in algorithm), and sometimes you invent a completely new one from scratch.</p>
+                    <p class="text-amber-900 font-semibold">In AI, this is where Data Scientists write code to define the architecture of the neural network or choose the mathematical formula.</p>
+                `,
+                proTools: [
+                    {
+                        name: 'SageMaker Studio / Notebook Instances',
+                        type: 'Integrated Development Environment (IDE)',
+                        desc: 'Your cloud-based workstation. It\'s an interface (usually Jupyter Notebooks) where you write Python code (Pandas, TensorFlow, PyTorch) to build your models.',
+                        options: [
+                            { name: 'Instance Types (Compute)', detail: 'You MUST choose the underlying computer. Examples: <code>ml.t3.medium</code> (cheap, for writing code), <code>ml.p3.2xlarge</code> (has GPUs for heavy lifting).' },
+                            { name: 'EBS Volume Size', detail: 'Attached hard drive space (e.g., 5GB to 16384GB). You need enough space to download your datasets locally into the notebook.' },
+                            { name: 'Lifecycle Configurations', detail: 'Scripts that run automatically when the notebook starts (e.g., to auto-install specific Python libraries like <code>pip install xgboost</code> so you don\'t have to do it every time).' }
+                        ]
+                    },
+                    {
+                        name: 'SageMaker Built-in Algorithms',
+                        type: 'Pre-packaged Models',
+                        desc: 'AWS provides pre-written, highly optimized algorithms. You don\'t write the math; you just point it at your data.',
+                        options: [
+                            { name: 'XGBoost', detail: 'The king of tabular (spreadsheet) data. Great for predicting prices, churn, or risk.' },
+                            { name: 'Image Classification (ResNet)', detail: 'Used for categorizing pictures.' },
+                            { name: 'BlazingText', detail: 'Highly optimized text classification and Word2Vec creation.' },
+                            { name: 'Input/Output Formats', detail: 'Most built-in algorithms require data in specific formats, usually <code>CSV</code> or <code>RecordIO-Protobuf</code> (a highly compressed format for faster AWS processing).' }
+                        ]
+                    }
+                ]
+            },
+            train: {
+                id: '🔥',
+                icon: '🔥',
+                title: '3. Train & Tune',
+                subtitle: 'Baking and Tasting',
+                analogy: `
+                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
+                    <p class="text-amber-900 mb-2">You put the cake in the oven (Training). But wait! What temperature should the oven be? How long should it bake? These are called "Hyperparameters." <br><br>Instead of guessing, you hire a robot chef. You tell the robot: <i>"Bake 50 cakes. Try temperatures between 300° and 400°, and times between 20 and 40 minutes. Bring me the best tasting one."</i></p>
+                    <p class="text-amber-900 font-semibold">In AI, Training is the computer finding the patterns. Tuning is finding the best settings for the math formula.</p>
+                `,
+                proTools: [
+                    {
+                        name: 'SageMaker Training Jobs',
+                        type: 'Ephemeral Compute Clusters',
+                        desc: 'You DO NOT train on your notebook. Notebooks are weak. You tell SageMaker to spin up massive servers, run the training, save the result, and shut down immediately so you don\'t pay extra.',
+                        options: [
+                            { name: 'Estimator Object', detail: 'The Python code block where you define the job. You define the <code>image_uri</code> (the Docker container holding the algorithm) and the <code>role</code> (IAM permissions).' },
+                            { name: 'InputDataConfig', detail: 'You must provide the exact S3 URI (e.g., <code>s3://my-bucket/train-data/</code>) where the raw data lives. SageMaker downloads it to the training instance.' },
+                            { name: 'OutputDataConfig', detail: 'The S3 bucket where the final, trained <code>model.tar.gz</code> file will be saved.' },
+                            { name: 'Managed Spot Training', detail: 'A crucial cost-saving setting. Uses spare AWS servers for up to 90% discount. If AWS needs the server back, it pauses your job. Requires setting up "Checkpointing" (saving progress midway).' }
+                        ]
+                    },
+                    {
+                        name: 'Automatic Model Tuning (Hyperparameter Tuning)',
+                        type: 'Optimization Engine',
+                        desc: 'Launches multiple training jobs concurrently with slightly different parameters to find the most accurate model.',
+                        options: [
+                            { name: 'Objective Metric', detail: 'What are you trying to maximize/minimize? (e.g., Maximize <code>Validation:Accuracy</code> or Minimize <code>Root Mean Square Error</code>).' },
+                            { name: 'Parameter Ranges', detail: 'You set the bounds. E.g., Learning Rate (Continuous): 0.001 to 0.1. Batch Size (Integer): 32 to 256.' },
+                            { name: 'Search Strategy', detail: '<code>Bayesian</code> (smart, learns from previous jobs to guess better next time) or <code>Random</code> (picks blindly, faster but less efficient).' }
+                        ]
+                    },
+                    {
+                        name: 'SageMaker Autopilot',
+                        type: 'AutoML (No-Code AI)',
+                        desc: 'You just provide the spreadsheet (CSV) and tell it which column to predict. Autopilot automatically cleans data, tries multiple algorithms, tunes them, and gives you a leaderboard of the best models.',
+                        options: [
+                            { name: 'Visibility', detail: 'Unlike black-box AutoML, Autopilot generates a Jupyter Notebook showing exactly how it built the model, so you can edit it later.' }
+                        ]
+                    }
+                ],
+                includeChart: true // Flag to render the chart
+            },
+            deploy: {
+                id: 'deploy',
+                icon: '🚚',
+                title: '4. Deploy (Hosting)',
+                subtitle: 'Opening the Drive-Thru',
+                analogy: `
+                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
+                    <p class="text-amber-900 mb-2">The recipe is perfect! Now, you open up the restaurant window. Customers drive up, hand you their order (data), and you instantly hand them a baked pizza (the prediction). <br><br>If 1000 cars show up at once, your kitchen needs to magically clone itself so nobody waits (Auto-scaling).</p>
+                    <p class="text-amber-900 font-semibold">In AI, Deployment means putting your <code>model.tar.gz</code> file onto a live server so apps (like your phone) can ask it questions via an API.</p>
+                `,
+                proTools: [
+                    {
+                        name: 'Real-Time Endpoints',
+                        type: 'Always-On API Servers',
+                        desc: 'A dedicated server that is always running, waiting for data payloads to arrive via HTTPS. Responds in milliseconds.',
+                        options: [
+                            { name: 'InitialInstanceCount', detail: 'How many servers to start with. (Always use >= 2 across different Availability Zones for production reliability).' },
+                            { name: 'InstanceType', detail: 'e.g., <code>ml.m5.large</code> for general inference, or <code>ml.g4dn.xlarge</code> if your model requires a GPU to infer quickly.' },
+                            { name: 'Auto-Scaling Policies', detail: 'Rules you set. "If the endpoint receives more than 1000 requests per minute, automatically add another server. If it drops to 10, remove the server."' }
+                        ]
+                    },
+                    {
+                        name: 'Production Variants (A/B Testing)',
+                        type: 'Traffic Splitting',
+                        desc: 'Deploying two different models behind a single endpoint URL to test which is better in the real world.',
+                        options: [
+                            { name: 'InitialVariantWeight', detail: 'You set the rules. e.g., Model A (old reliable) gets Weight: 90 (90% of traffic). Model B (new experiment) gets Weight: 10. You monitor which one makes more money.' }
+                        ]
+                    },
+                    {
+                        name: 'Other Deployment Types',
+                        type: 'Cost/Scale Alternatives',
+                        desc: 'Real-time isn\'t always needed.',
+                        options: [
+                            { name: 'Serverless Inference', detail: 'You don\'t pick servers. It only turns on when a request comes in. Great for apps used sporadically. You pay per request, not per hour.' },
+                            { name: 'Asynchronous Inference', detail: 'For large payloads (like analyzing a 1GB video). The user sends it, gets a token, and checks back later for the result. Avoids browser timeouts.' },
+                            { name: 'Batch Transform', detail: 'No API endpoint. You have an S3 bucket of 1 million images. SageMaker spins up servers, predicts all 1 million, saves results to another S3 bucket, and turns off. Used for overnight jobs.' }
+                        ]
+                    }
+                ]
+            },
+            monitor: {
+                id: 'monitor',
+                icon: '📋',
+                title: '5. Monitor & Manage',
+                subtitle: 'The Health Inspector',
+                analogy: `
+                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
+                    <p class="text-amber-900 mb-2">Your restaurant is running, but what if the price of tomatoes changes, or people suddenly start hating cheese? Your old recipe won't work anymore! A health inspector must constantly taste the food and check customer reviews. If the quality drops, an alarm rings, and you must bake a new recipe.</p>
+                    <p class="text-amber-900 font-semibold">In AI, the world changes. A model trained to predict house prices in 2019 is useless in 2024. Monitoring watches for these changes (Data Drift).</p>
+                `,
+                proTools: [
+                    {
+                        name: 'SageMaker Model Monitor',
+                        type: 'Continuous Quality Control',
+                        desc: 'Automatically monitors endpoints in production to detect deviations in data quality or model accuracy.',
+                        options: [
+                            { name: 'DataCaptureConfig', detail: 'A setting you enable on the Endpoint. It saves a copy of every request sent by users and every prediction the model makes into an S3 bucket.' },
+                            { name: 'Data Quality Drift', detail: 'Triggers CloudWatch alarms if the incoming data changes. (e.g., Training data age was 20-50. Suddenly, real-world users inputting age 80-100). The model hasn\'t seen this, so predictions will be bad.' },
+                            { name: 'Model Quality Drift', detail: 'If you have ground truth (actual results) later, it compares prediction vs reality to check if accuracy is dropping.' }
+                        ]
+                    },
+                    {
+                        name: 'SageMaker Clarify',
+                        type: 'Bias & Explainability Tool',
+                        desc: 'Ensures your model isn\'t racist, sexist, or making unfair decisions, and explains WHY it made a decision.',
+                        options: [
+                            { name: 'Pre-training Bias', detail: 'Checks raw data. (e.g., "Are there 90% male resumes and only 10% female? The model will learn to favor males.")' },
+                            { name: 'Post-training Bias', detail: 'Checks the model\'s predictions across different groups.' },
+                            { name: 'Explainability (SHAP values)', detail: 'If a bank loan is denied, Clarify tells you exactly which feature caused it (e.g., "Income was high, but Credit Score was the primary reason for denial").' }
+                        ]
+                    },
+                    {
+                        name: 'SageMaker Pipelines',
+                        type: 'MLOps Automation (CI/CD for ML)',
+                        desc: 'Instead of clicking buttons manually, you write code to define the entire flow (Prep -> Train -> Tune -> Evaluate -> Deploy).',
+                        options: [
+                            { name: 'Steps', detail: 'Defined as code objects: <code>ProcessingStep</code>, <code>TrainingStep</code>, <code>ConditionStep</code>.' },
+                            { name: 'ConditionStep Logic', detail: 'Crucial for automation. e.g., "IF Accuracy > 85%, proceed to RegisterModelStep. IF Accuracy < 85%, Stop the pipeline and email the team."' },
+                            { name: 'Model Registry', detail: 'A catalog of approved models. Before deploying to production, a senior data scientist can go into the registry, look at the metrics, and manually change the status to "Approved".' }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        const stages = Object.keys(sagemakerData);
+        let chartInstance = null;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNavigation();
+            loadContent('prep'); // Load first stage by default
+        });
+
+        // --- Render Navigation ---
+        function renderNavigation() {
+            const navContainer = document.getElementById('pipeline-nav');
+            stages.forEach((key, index) => {
+                const data = sagemakerData[key];
+                const btn = document.createElement('button');
+                btn.className = `pipeline-step flex-1 py-3 px-4 rounded-xl text-center font-bold text-sm sm:text-base text-gray-600 hover:bg-gray-50 flex flex-col items-center gap-1 min-w-[120px]`;
+                btn.id = `nav-${key}`;
+                btn.onclick = () => loadContent(key);
+                btn.innerHTML = `
+                    <span class="text-2xl">${data.icon}</span>
+                    <span>${data.title.split(' ')[0]} ${data.title.split(' ')[1] || ''}</span>
+                `;
+                navContainer.appendChild(btn);
+                
+                // Add arrow separator except for last item
+                if (index < stages.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'hidden md:flex items-center text-gray-300 font-bold';
+                    arrow.innerHTML = '▶';
+                    navContainer.appendChild(arrow);
+                }
+            });
+        }
+
+        // --- Load Content Area ---
+        function loadContent(stageKey) {
+            const data = sagemakerData[stageKey];
+            const contentArea = document.getElementById('content-area');
+            
+            // Update active state in nav
+            document.querySelectorAll('.pipeline-step').forEach(el => el.classList.remove('active', 'text-orange-600'));
+            const activeNav = document.getElementById(`nav-${stageKey}`);
+            if(activeNav) {
+                activeNav.classList.add('active', 'text-orange-600');
+            }
+
+            // Fade out
+            contentArea.style.opacity = 0;
+            
+            setTimeout(() => {
+                let html = `
+                    <div class="mb-8 text-center sm:text-left">
+                        <h2 class="text-3xl font-extrabold text-gray-900 flex items-center justify-center sm:justify-start gap-3">
+                            <span class="text-4xl">${data.icon}</span> ${data.title}
+                        </h2>
+                        <p class="text-lg text-gray-500 font-semibold mt-1 uppercase tracking-wide">${data.subtitle}</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        
+                        <!-- Left Column: The Concept -->
+                        <div class="lg:col-span-4 space-y-6">
+                            <div class="analogy-card p-6 rounded-2xl shadow-sm">
+                                ${data.analogy}
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                <h4 class="text-lg font-bold text-gray-800 mb-2">Why it matters for Pros:</h4>
+                                <p class="text-gray-600 text-sm">Mistakes in this phase compound. If you configure these tools incorrectly, you will either pay AWS thousands of dollars unnecessarily, or deploy a model that makes terrible predictions in the real world.</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Pro Tools Detail -->
+                        <div class="lg:col-span-8 space-y-6">
+                            <h3 class="text-2xl font-extrabold text-gray-900 border-b-2 border-blue-500 pb-2 inline-block">The Pro Console: Tools & Configuration</h3>
+                `;
+
+                // Render Pro Tools
+                data.proTools.forEach(tool => {
+                    let optionsHtml = tool.options.map(opt => `
+                        <li class="mb-2">
+                            <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-sm code-font">${opt.name}</span>: 
+                            <span class="text-slate-600 text-sm">${opt.detail}</span>
+                        </li>
+                    `).join('');
+
+                    html += `
+                        <div class="pro-card p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
+                                <h4 class="text-xl font-bold text-blue-900">${tool.name}</h4>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">${tool.type}</span>
+                            </div>
+                            <p class="text-gray-700 mb-4 font-medium">${tool.desc}</p>
+                            <div class="bg-white bg-opacity-50 p-4 rounded-xl border border-blue-100">
+                                <h5 class="text-sm font-extrabold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                    ⚙️ Critical Configurations
+                                </h5>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    ${optionsHtml}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`; // Close grid and right column
+
+                // Inject Chart if needed (specifically for training/tuning stage)
+                if (data.includeChart) {
+                    html += `
+                        <div class="mt-12 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-extrabold text-gray-900">Visualization: Automatic Model Tuning in Action</h3>
+                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">This chart shows what SageMaker does behind the scenes when you run a Hyperparameter Tuning Job. It tries different "recipes" (dots). The goal is to find the highest accuracy in the shortest training time.</p>
+                            </div>
+                            <!-- STRICT CHART CONTAINER -->
+                            <div class="chart-container">
+                                <canvas id="tuningChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                contentArea.innerHTML = html;
+                contentArea.style.opacity = 1;
+
+                // Render chart after DOM update if needed
+                if (data.includeChart) {
+                    setTimeout(renderChart, 100);
+                }
+
+            }, 300); // match transition duration
+        }
+
+        // --- Chart.js Implementation for Visualization ---
+        function renderChart() {
+            const ctx = document.getElementById('tuningChart');
+            if (!ctx) return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            // Generate dummy scatter data representing training jobs
+            // X: Training Time (minutes), Y: Validation Accuracy (%)
+            const jobs = [];
+            for(let i=0; i<40; i++) {
+                jobs.push({
+                    x: Math.random() * 50 + 10, // 10 to 60 mins
+                    y: (Math.random() * 40) + 50 + (i*0.2), // getting better over time conceptually
+                    r: 6, // radius
+                    jobName: `Job-${100+i}`,
+                    learningRate: (Math.random() * 0.1).toFixed(4)
+                });
+            }
+            
+            // Add a "Best Job" outlier
+            jobs.push({ x: 35, y: 98.5, r: 10, jobName: 'Best-Model-XGB', learningRate: '0.0450', isBest: true });
+
+            chartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Standard Training Jobs',
+                        data: jobs.filter(j => !j.isBest),
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)', // Blue
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    },
+                    {
+                        label: '🏆 Best Model Found',
+                        data: jobs.filter(j => j.isBest),
+                        backgroundColor: 'rgba(245, 158, 11, 0.9)', // Amber/Orange
+                        borderColor: '#b45309',
+                        pointRadius: 10,
+                        pointHoverRadius: 12,
+                        pointStyle: 'star'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CRITICAL for chart-container logic
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { size: 14, family: 'Nunito' },
+                            bodyFont: { size: 13, family: 'Roboto Mono' },
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const pt = context.raw;
+                                    const labels = [
+                                        `Status: Completed`,
+                                        `Accuracy: ${pt.y.toFixed(1)}%`,
+                                        `Time: ${pt.x.toFixed(0)} mins`,
+                                        `Learning Rate (Hyperparameter): ${pt.learningRate}`
+                                    ];
+                                    // Wrap logic simulation by breaking into array
+                                    return labels;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Training Time (Minutes)', font: {weight: 'bold'} },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Validation Accuracy (%)', font: {weight: 'bold'} },
+                            grid: { color: '#f1f5f9' },
+                            suggestedMin: 40,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
