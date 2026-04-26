@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open-Concepts — Technical Breakthroughs, Explained Simply</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:    '#FDFBF7',
+            'cream-dark': '#F5F0E8',
+            slate:    '#232F3E',
+            'slate-mid': '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:    '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale': '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; }
+
+    /* Grain overlay for texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* Nav blur */
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    /* Hero text */
+    .hero-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .hero-italic {
+      font-style: italic;
+      color: #FF9900;
+    }
+
+    /* Search bar glow */
+    .search-bar:focus-within {
+      box-shadow: 0 0 0 3px rgba(255,153,0,0.25), 0 8px 32px rgba(35,47,62,0.10);
+    }
+    .search-bar {
+      transition: box-shadow 0.25s ease;
+      box-shadow: 0 4px 24px rgba(35,47,62,0.08);
+    }
+
+    /* Card hover */
+    .topic-card {
+      transition: transform 0.22s cubic-bezier(.22,.68,0,1.2), box-shadow 0.22s ease, border-color 0.2s ease;
+      border: 1.5px solid rgba(35,47,62,0.07);
+    }
+    .topic-card:hover {
+      transform: translateY(-5px) scale(1.012);
+      box-shadow: 0 16px 40px rgba(35,47,62,0.13);
+      border-color: rgba(255,153,0,0.35);
+    }
+    .topic-card:hover .card-btn {
+      background: #FF9900;
+      color: #fff;
+    }
+    .card-btn {
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Filter pill active */
+    .pill.active {
+      background: #232F3E;
+      color: #fff;
+    }
+    .pill {
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+      cursor: pointer;
+    }
+    .pill:hover:not(.active) {
+      background: #FFB84D;
+      color: #232F3E;
+    }
+
+    /* Section fade-in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.6s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* Accent stripe */
+    .accent-stripe {
+      background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%);
+    }
+
+    /* Topic icon ring */
+    .icon-ring {
+      border: 2px solid rgba(255,153,0,0.2);
+      background: linear-gradient(135deg, #FFF3DC 0%, #fff 100%);
+    }
+
+    /* Footer */
+    footer { border-top: 1px solid rgba(35,47,62,0.10); }
+
+    /* Mobile hamburger */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+  </style>
+</head>
+<body class="min-h-screen relative">
+
+<!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+
+    <!-- Logo -->
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="hidden md:flex items-center gap-7">
+      <a href="#topics"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="#roadmaps"  class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="#about"     class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">Start Reading →</a>
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/08 block">All Topics</a>
+    <a href="#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/08 block">Roadmaps</a>
+    <a href="#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+    <a href="#topics"   onclick="closeMenu()" class="mt-1 px-4 py-2.5 rounded-lg bg-slate text-white text-sm font-medium text-center block">Start Reading →</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<header class="relative pt-36 pb-24 px-5 text-center overflow-hidden">
+
+  <!-- Background blob -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full opacity-20 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <!-- Eyebrow -->
+    <div class="fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber/30 bg-amber-pale text-amber text-xs font-semibold uppercase tracking-widest mb-6">
+      <span>☁️</span> Cloud · AI · Linux · DevOps
+    </div>
+
+    <!-- Title -->
+    <h1 class="hero-title fade-up delay-1 text-5xl md:text-7xl text-slate mb-5">
+      Open<span class="hero-italic">·</span>Concepts
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="fade-up delay-2 font-display font-light italic text-slate-mid text-xl md:text-2xl mb-3">
+      Technical breakthroughs, <span class="text-amber font-semibold not-italic">explained simply.</span>
+    </p>
+    <p class="fade-up delay-3 font-body text-slate-light text-base md:text-lg max-w-xl mx-auto mb-10">
+      No jargon. No fluff. Just clear, human explanations of the tech that powers our world.
+    </p>
+
+    <!-- Search Bar -->
+    <div class="fade-up delay-4 search-bar max-w-2xl mx-auto rounded-2xl bg-white flex items-center gap-3 px-5 py-4 border border-slate/10">
+      <span class="text-amber text-xl flex-shrink-0">🔍</span>
+      <input
+        type="text"
+        placeholder="Search for a concept (e.g. S3, SageMaker, Bash)..."
+        class="flex-1 bg-transparent outline-none font-body text-slate placeholder-slate-light text-base"
+      />
+      <button class="flex-shrink-0 px-5 py-2 rounded-xl bg-slate text-white text-sm font-semibold hover:bg-amber transition-colors duration-200">
+        Search
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="fade-up delay-4 flex flex-wrap justify-center gap-8 mt-10">
+      <div class="text-center">
+        <p class="font-display font-bold text-2xl text-slate">50+</p>
+        <p class="text-slate-light text-xs uppercase tracking-widest font-medium">Concepts</p>
+      </div>
+      <div class="w-px bg-slate/15 self-stretch"></div>
+      <div class="text-center">
+        <p class="font-display font-bold text-2xl text-slate">4</p>
+        <p class="text-slate-light text-xs uppercase tracking-widest font-medium">Categories</p>
+      </div>
+      <div class="w-px bg-slate/15 self-stretch"></div>
+      <div class="text-center">
+        <p class="font-display font-bold text-2xl text-slate">Plain</p>
+        <p class="text-slate-light text-xs uppercase tracking-widest font-medium">English Always</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Accent divider -->
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════════════ FILTER PILLS ═══════════════════════════ -->
+<section class="py-10 px-5 max-w-7xl mx-auto">
+  <div class="flex flex-wrap justify-center gap-3" id="filter-pills">
+    <button onclick="filterCards('all')"   class="pill active   px-5 py-2 rounded-full border border-slate/15 text-sm font-medium bg-slate text-white">✦ All Topics</button>
+    <button onclick="filterCards('cloud')" class="pill          px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">☁️ Cloud</button>
+    <button onclick="filterCards('ai')"    class="pill          px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">🤖 AI / ML</button>
+    <button onclick="filterCards('linux')" class="pill          px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">🐧 Linux</button>
+    <button onclick="filterCards('howto')" class="pill          px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">📖 How-To Guides</button>
+    <button onclick="filterCards('devops')"class="pill          px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">⚙️ DevOps</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ TOPIC GRID ═══════════════════════════ -->
+<section id="topics" class="pb-20 px-5 max-w-7xl mx-auto">
+
+  <div class="mb-10 flex items-end justify-between flex-wrap gap-3">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-1">Explore</p>
+      <h2 class="font-display font-bold text-3xl md:text-4xl text-slate">What Is… ?</h2>
+    </div>
+    <p class="font-body text-slate-light text-sm max-w-xs text-right">Tap any card to read a plain-English breakdown.</p>
+  </div>
+
+  <div id="card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+
+    <!-- Card: S3 -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">☁️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Cloud</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS S3</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Amazon's giant cloud filing cabinet. Store any file — images, videos, code — and access it from anywhere.</p>
+      </div>
+      <a href="what-is-s3.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: SageMaker -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🤖</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS SageMaker AI</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">AWS's ML studio — build, train and deploy machine learning models without managing servers.</p>
+      </div>
+      <a href="what-is-sagemaker.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: EC2 -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🖥️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Cloud</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS EC2</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Rent a virtual computer in the cloud. Pick the size, install your software, and run anything you want.</p>
+      </div>
+      <a href="what-is-ec2.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: IAM -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🔑</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Cloud</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS IAM</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Identity & Access Management — the bouncer that decides who can touch what in your AWS account.</p>
+      </div>
+      <a href="what-is-iam.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: GenAI -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">✨</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Generative AI</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">AI that doesn't just analyze — it creates. Text, images, code, audio. The engine behind ChatGPT.</p>
+      </div>
+      <a href="what-is-generative-ai.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: Linux Bash -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="linux">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🐧</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Linux</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Linux & Bash</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">The language of servers. Learn to talk to any Linux machine with just a keyboard and a terminal.</p>
+      </div>
+      <a href="what-is-bash.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: Docker -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🐳</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Docker</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Box your app and all its dependencies into a container so it runs identically everywhere — no more "works on my machine."</p>
+      </div>
+      <a href="what-is-docker.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: Lambda -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">⚡</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Cloud</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS Lambda</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Run code without a server. Upload a function, define a trigger, and AWS handles everything else.</p>
+      </div>
+      <a href="what-is-lambda.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: LLMs -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🧠</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Large Language Models</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">The brain behind AI chatbots. Neural networks trained on billions of words to predict and generate text.</p>
+      </div>
+      <a href="what-is-llm.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: CI/CD -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🔄</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">CI / CD Pipelines</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Automated assembly lines for code — test, build, and ship software faster with fewer human errors.</p>
+      </div>
+      <a href="what-is-cicd.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: SSH -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="linux howto">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🔐</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Linux · How-To</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">SSH Explained</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">A secure, encrypted tunnel into any remote machine. The essential remote-access skill every developer needs.</p>
+      </div>
+      <a href="what-is-ssh.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: VPC -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🌐</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Cloud</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS VPC</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Your private neighbourhood inside AWS — walls, gates, and rooms for your cloud resources, all under your control.</p>
+      </div>
+      <a href="what-is-vpc.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: Kubernetes -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">⚙️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Kubernetes (K8s)</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">An orchestrator that manages hundreds of Docker containers — restarts failures, scales up demand, routes traffic.</p>
+      </div>
+      <a href="what-is-kubernetes.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: RAG -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">📚</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">RAG (Retrieval AI)</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Give an AI a search engine. RAG lets models look up real documents before answering — no more hallucinations.</p>
+      </div>
+      <a href="what-is-rag.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: How to set up GitHub Pages -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="howto">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">📖</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">How-To Guide</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Host a Site on GitHub Pages</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Free website hosting from GitHub, zero server config. Step-by-step from push to live URL in 10 minutes.</p>
+      </div>
+      <a href="howto-github-pages.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+    <!-- Card: Terraform -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🏗️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Terraform (IaC)</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">Infrastructure as Code — describe your entire cloud setup in a text file and let Terraform build it for you.</p>
+      </div>
+      <a href="what-is-terraform.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        Read Simple Guide <span>→</span>
+      </a>
+    </article>
+
+  </div><!-- /grid -->
+
+  <!-- No results state (hidden by default) -->
+  <div id="no-results" class="hidden text-center py-20">
+    <p class="text-4xl mb-4">🔭</p>
+    <p class="font-display font-semibold text-xl text-slate mb-2">No articles in this category yet.</p>
+    <p class="text-slate-light text-sm">New guides are being written — check back soon!</p>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════ ROADMAPS TEASER ═══════════════════════════ -->
+<section id="roadmaps" class="bg-slate py-20 px-5">
+  <div class="max-w-5xl mx-auto text-center">
+    <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-2">Coming Soon</p>
+    <h2 class="font-display font-bold text-3xl md:text-4xl text-white mb-4">Learning Roadmaps</h2>
+    <p class="font-body text-slate-light text-base md:text-lg max-w-xl mx-auto mb-10">
+      Structured paths through the concepts — from zero to cloud architect, or from curious to ML practitioner.
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
+
+      <div class="rounded-2xl border border-white/10 bg-white/05 p-6 hover:border-amber/40 transition-colors">
+        <div class="text-3xl mb-3">☁️</div>
+        <h3 class="font-display font-semibold text-white text-lg mb-1.5">AWS Fundamentals</h3>
+        <p class="text-slate-light text-sm leading-relaxed">S3 → EC2 → IAM → VPC → Lambda. The 5 concepts that unlock everything else in AWS.</p>
+        <span class="mt-4 inline-block text-xs text-amber font-semibold border border-amber/30 px-3 py-1 rounded-full">In Progress</span>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/05 p-6 hover:border-amber/40 transition-colors">
+        <div class="text-3xl mb-3">🤖</div>
+        <h3 class="font-display font-semibold text-white text-lg mb-1.5">GenAI from Scratch</h3>
+        <p class="text-slate-light text-sm leading-relaxed">LLMs → Embeddings → RAG → Agents → Fine-tuning. Build real AI apps step by step.</p>
+        <span class="mt-4 inline-block text-xs text-amber font-semibold border border-amber/30 px-3 py-1 rounded-full">In Progress</span>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/05 p-6 hover:border-amber/40 transition-colors">
+        <div class="text-3xl mb-3">⚙️</div>
+        <h3 class="font-display font-semibold text-white text-lg mb-1.5">DevOps Essentials</h3>
+        <p class="text-slate-light text-sm leading-relaxed">Linux → Docker → CI/CD → Kubernetes → Terraform. The modern shipping toolkit.</p>
+        <span class="mt-4 inline-block text-xs text-amber font-semibold border border-amber/30 px-3 py-1 rounded-full">Planned</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ABOUT ═══════════════════════════ -->
+<section id="about" class="py-20 px-5">
+  <div class="max-w-3xl mx-auto">
+
+    <div class="flex flex-col md:flex-row items-start gap-10">
+      <!-- Avatar placeholder -->
+      <div class="flex-shrink-0">
+        <div class="w-20 h-20 rounded-2xl bg-amber-pale border-2 border-amber/30 flex items-center justify-center text-4xl">✍️</div>
+      </div>
+      <!-- Text -->
+      <div>
+        <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-2">About This Blog</p>
+        <h2 class="font-display font-bold text-3xl text-slate mb-4">Why Open-Concepts?</h2>
+        <p class="font-body text-slate-mid leading-relaxed mb-4">
+          The cloud and AI ecosystem is exploding — but most documentation is written <em>for</em> engineers <em>by</em> engineers. Open-Concepts exists to break that barrier. Every guide is written assuming you're smart, curious, and just need someone to drop the jargon.
+        </p>
+        <p class="font-body text-slate-mid leading-relaxed mb-6">
+          Topics cover AWS, Generative AI, Linux, and DevOps — the four pillars of modern tech infrastructure — with more added every week.
+        </p>
+        <a href="about.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors duration-200">
+          Learn more about this project →
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+
+    <p class="font-body text-slate-light text-xs text-center">
+      Built with ❤️ on GitHub Pages · No jargon, just clarity.
+    </p>
+
+    <div class="flex items-center gap-5">
+      <a href="#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+
+  </div>
+</footer>
+
+<!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+<script>
+  /* ── Mobile menu ── */
+  function toggleMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('mobile-menu').classList.remove('open');
+  }
+
+  /* ── Filter pills ── */
+  function filterCards(category) {
+    // Update active pill
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    const cards = document.querySelectorAll('#card-grid article');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const cats = card.dataset.category || '';
+      const match = category === 'all' || cats.includes(category);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  /* ── Sticky nav shadow on scroll ── */
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    nav.style.boxShadow = window.scrollY > 10
+      ? '0 4px 24px rgba(35,47,62,0.10)'
+      : 'none';
+  });
+
+  /* ── Search filter (live) ── */
+  document.querySelector('input[type=text]').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    const cards = document.querySelectorAll('#card-grid article');
+    let visible = 0;
+    cards.forEach(card => {
+      const text = card.innerText.toLowerCase();
+      const match = text.includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+
+    // reset filter pills if typing
+    if (q.length > 0) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    }
+  });
+</script>
+</body>
+</html>
