@@ -65,13 +65,48 @@
       color: #FF9900;
     }
 
-    /* Search bar glow */
-    .search-bar:focus-within {
-      box-shadow: 0 0 0 3px rgba(255,153,0,0.25), 0 8px 32px rgba(35,47,62,0.10);
+    /* Hero Logo Mark */
+    .logo-mark-wrap { filter: drop-shadow(0 20px 48px rgba(255,153,0,0.18)) drop-shadow(0 4px 16px rgba(35,47,62,0.12)); }
+    .logo-glow-ring {
+      background: conic-gradient(from 0deg, #FF9900, #FFB84D, #232F3E, #FF9900);
+      border-radius: 1.75rem;
+      padding: 2px;
+      animation: spin-ring 8s linear infinite;
+      opacity: 0.7;
     }
-    .search-bar {
-      transition: box-shadow 0.25s ease;
-      box-shadow: 0 4px 24px rgba(35,47,62,0.08);
+    @keyframes spin-ring {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .logo-badge {
+      background: linear-gradient(160deg, #ffffff 0%, #FFF8EE 60%, #F5F0E8 100%);
+      border: 1.5px solid rgba(255,153,0,0.25);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+      min-width: 280px;
+    }
+    .logo-mono-oc {
+      font-size: 4.5rem;
+      color: #232F3E;
+      letter-spacing: -0.06em;
+      line-height: 1;
+    }
+    .logo-mono-dot {
+      font-family: 'Fraunces', serif;
+      font-size: 5rem;
+      color: #FF9900;
+      line-height: 1;
+      margin-bottom: -0.05em;
+    }
+    .logo-pill {
+      background: rgba(35,47,62,0.06);
+      border: 1px solid rgba(35,47,62,0.10);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #3D4F60;
+      letter-spacing: 0.04em;
+      font-family: 'DM Sans', sans-serif;
     }
 
     /* Card hover */
@@ -181,7 +216,7 @@
 </nav>
 
 <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
-<header class="relative pt-36 pb-24 px-5 text-center overflow-hidden">
+<header class="relative pt-36 pb-10 px-5 text-center overflow-hidden">
 
   <!-- Background blob -->
   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full opacity-20 pointer-events-none"
@@ -207,34 +242,49 @@
       No jargon. No fluff. Just clear, human explanations of the tech that powers our world.
     </p>
 
-    <!-- Search Bar -->
-    <div class="fade-up delay-4 search-bar max-w-2xl mx-auto rounded-2xl bg-white flex items-center gap-3 px-5 py-4 border border-slate/10">
-      <span class="text-amber text-xl flex-shrink-0">🔍</span>
-      <input
-        type="text"
-        placeholder="Search for a concept (e.g. S3, SageMaker, Bash)..."
-        class="flex-1 bg-transparent outline-none font-body text-slate placeholder-slate-light text-base"
-      />
-      <button class="flex-shrink-0 px-5 py-2 rounded-xl bg-slate text-white text-sm font-semibold hover:bg-amber transition-colors duration-200">
-        Search
-      </button>
-    </div>
-
-    <!-- Stats -->
-    <div class="fade-up delay-4 flex flex-wrap justify-center gap-8 mt-10">
-      <div class="text-center">
-        <p class="font-display font-bold text-2xl text-slate">50+</p>
-        <p class="text-slate-light text-xs uppercase tracking-widest font-medium">Concepts</p>
-      </div>
-      <div class="w-px bg-slate/15 self-stretch"></div>
-      <div class="text-center">
-        <p class="font-display font-bold text-2xl text-slate">4</p>
-        <p class="text-slate-light text-xs uppercase tracking-widest font-medium">Categories</p>
-      </div>
-      <div class="w-px bg-slate/15 self-stretch"></div>
-      <div class="text-center">
-        <p class="font-display font-bold text-2xl text-slate">Plain</p>
-        <p class="text-slate-light text-xs uppercase tracking-widest font-medium">English Always</p>
+    <!-- Hero Logo Mark -->
+    <div class="fade-up delay-4 flex justify-center mt-10 mb-2">
+      <div class="logo-mark-wrap relative inline-flex items-center justify-center">
+        <!-- Outer glow ring -->
+        <div class="absolute inset-0 rounded-3xl logo-glow-ring"></div>
+        <!-- Main badge -->
+        <div class="relative logo-badge rounded-3xl px-10 py-8 flex flex-col items-center gap-3">
+          <!-- Top row: tiny topic pills -->
+          <div class="flex gap-2 flex-wrap justify-center">
+            <span class="logo-pill">☁️ Cloud</span>
+            <span class="logo-pill">🤖 AI/ML</span>
+            <span class="logo-pill">🐧 Linux</span>
+            <span class="logo-pill">⚙️ DevOps</span>
+          </div>
+          <!-- Monogram -->
+          <div class="flex items-end gap-0 leading-none select-none">
+            <span class="logo-mono-oc font-display font-bold">OC</span>
+            <span class="logo-mono-dot">·</span>
+          </div>
+          <!-- Wordmark -->
+          <div class="flex items-center gap-3">
+            <div class="h-px w-10 bg-amber/40"></div>
+            <span class="font-body text-xs uppercase tracking-[0.25em] text-slate-light font-semibold">Open · Concepts</span>
+            <div class="h-px w-10 bg-amber/40"></div>
+          </div>
+          <!-- Stat row -->
+          <div class="flex items-center gap-5 mt-1">
+            <div class="text-center">
+              <p class="font-display font-bold text-xl text-slate leading-none">50+</p>
+              <p class="text-slate-light text-[10px] uppercase tracking-widest mt-0.5">Concepts</p>
+            </div>
+            <div class="w-px h-8 bg-slate/15"></div>
+            <div class="text-center">
+              <p class="font-display font-bold text-xl text-slate leading-none">4</p>
+              <p class="text-slate-light text-[10px] uppercase tracking-widest mt-0.5">Categories</p>
+            </div>
+            <div class="w-px h-8 bg-slate/15"></div>
+            <div class="text-center">
+              <p class="font-display font-bold text-xl text-amber leading-none">0</p>
+              <p class="text-slate-light text-[10px] uppercase tracking-widest mt-0.5">Jargon</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -611,24 +661,7 @@
       : 'none';
   });
 
-  /* ── Search filter (live) ── */
-  document.querySelector('input[type=text]').addEventListener('input', function() {
-    const q = this.value.toLowerCase();
-    const cards = document.querySelectorAll('#card-grid article');
-    let visible = 0;
-    cards.forEach(card => {
-      const text = card.innerText.toLowerCase();
-      const match = text.includes(q);
-      card.style.display = match ? '' : 'none';
-      if (match) visible++;
-    });
-    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
 
-    // reset filter pills if typing
-    if (q.length > 0) {
-      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-    }
-  });
 </script>
 </body>
 </html>
