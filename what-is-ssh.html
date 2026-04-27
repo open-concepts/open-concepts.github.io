@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    @font-face {
+      font-family: 'MySignature';
+      src: url('signature.ttf');
+      font-display: swap;
+    }
+  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSH Explained — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active { border-bottom: 3px solid #FF9900; color: #232F3E; font-weight: 700; }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    .pro-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07); color: #232F3E;
+      padding: 2px 6px; border-radius: 4px; font-size: 0.82em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up  { animation: fadeUp 0.5s ease both; }
+    .delay-1  { animation-delay: 0.08s; }
+    .delay-2  { animation-delay: 0.16s; }
+    .delay-3  { animation-delay: 0.24s; }
+
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08);
+      border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900; border-left-color: #FF9900; padding-left: 8px;
+    }
+
+    /* terminal window chrome */
+    .terminal-window {
+      background: #1a1f2e;
+      border-radius: 0.875rem;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    .terminal-bar {
+      background: #2d3346;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-body {
+      padding: 18px 20px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: #a8d8a8;
+    }
+    .terminal-body .cmd  { color: #FFB84D; }
+    .terminal-body .flag { color: #79c8e6; }
+    .terminal-body .arg  { color: #e8c07d; }
+    .terminal-body .cmt  { color: #5c7a6b; font-style: italic; }
+    .terminal-body .ok   { color: #6fcf97; }
+    .terminal-body .warn { color: #f2c94c; }
+
+    /* cake layers */
+    .cake-layer {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: default;
+    }
+    .cake-layer:hover { transform: scale(1.015); box-shadow: 0 8px 28px rgba(255,153,0,0.18); }
+
+    /* key visual */
+    .key-card {
+      border: 2px solid transparent;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .key-card:hover { border-color: #FF9900; box-shadow: 0 6px 24px rgba(255,153,0,0.15); }
+
+    /* port forward diagram */
+    .pipe-arrow {
+      font-size: 1.25rem;
+      color: #FF9900;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative antialiased">
+
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">🐧 Linux · How-To</span>
+      <span>›</span>
+      <span class="text-slate-mid">SSH Explained</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">SSH?</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      The digital master key that replaced an internet full of postcards — how the Secure Shell works, why it's unbreakable, and how professionals wield it every day.
+    </p>
+
+    <!-- Meta row -->
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~22 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">🔐 Linux · Security · DevOps</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ QUICK OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🔐</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Encrypted Tunnel</p>
+      <p class="text-slate-light text-xs mt-1">All traffic scrambled end-to-end</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🗝️</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Key-Based Auth</p>
+      <p class="text-slate-light text-xs mt-1">No passwords needed, ever</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🚪</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Port 22</p>
+      <p class="text-slate-light text-xs mt-1">The default door for the SSH butler</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🌍</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Born 1995</p>
+      <p class="text-slate-light text-xs mt-1">Created after a university hack</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- TOC Sidebar -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('darkages')"   class="toc-link py-0.5 cursor-pointer active" data-tab="darkages">① The Dark Ages</a>
+        <a onclick="switchTab('howssh')"     class="toc-link py-0.5 cursor-pointer" data-tab="howssh">② How SSH Solves It</a>
+        <a onclick="switchTab('layers')"     class="toc-link py-0.5 cursor-pointer" data-tab="layers">③ The 3-Layer Cake</a>
+        <a onclick="switchTab('keys')"       class="toc-link py-0.5 cursor-pointer" data-tab="keys">④ Keys & Encryption</a>
+        <a onclick="switchTab('clients')"    class="toc-link py-0.5 cursor-pointer" data-tab="clients">⑤ SSH Clients</a>
+        <a onclick="switchTab('commands')"   class="toc-link py-0.5 cursor-pointer" data-tab="commands">⑥ Commands & Flags</a>
+        <a onclick="switchTab('keymgmt')"    class="toc-link py-0.5 cursor-pointer" data-tab="keymgmt">⑦ Key Management</a>
+        <a onclick="switchTab('tunneling')"  class="toc-link py-0.5 cursor-pointer" data-tab="tunneling">⑧ Port Forwarding</a>
+        <a onclick="switchTab('filetransfer')" class="toc-link py-0.5 cursor-pointer" data-tab="filetransfer">⑨ File Transfer</a>
+        <a onclick="switchTab('protools')"   class="toc-link py-0.5 cursor-pointer" data-tab="protools">⑩ Config & Terminal</a>
+      </nav>
+      <a href="index.html" class="mt-8 flex items-center gap-2 text-xs text-slate-light hover:text-amber transition-colors font-semibold">← Back to Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- Article content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Section Tabs -->
+    <div class="overflow-x-auto -mx-1 px-1 mb-8">
+      <div class="flex gap-1 bg-white rounded-2xl border border-slate/10 p-1.5 w-max shadow-sm">
+        <button onclick="switchTab('darkages')"     class="tab-btn active  px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="darkages">📮 Dark Ages</button>
+        <button onclick="switchTab('howssh')"       class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="howssh">🔒 How SSH Works</button>
+        <button onclick="switchTab('layers')"       class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="layers">🎂 3 Layers</button>
+        <button onclick="switchTab('keys')"         class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="keys">🗝️ Keys</button>
+        <button onclick="switchTab('clients')"      class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="clients">💻 Clients</button>
+        <button onclick="switchTab('commands')"     class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="commands">⌨️ Commands</button>
+        <button onclick="switchTab('keymgmt')"      class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="keymgmt">🔧 Key Mgmt</button>
+        <button onclick="switchTab('tunneling')"    class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="tunneling">🕳️ Tunneling</button>
+        <button onclick="switchTab('filetransfer')" class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="filetransfer">📦 File Transfer</button>
+        <button onclick="switchTab('protools')"     class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="protools">⚙️ Config & Terminal</button>
+      </div>
+    </div>
+
+
+    <!-- ══ TAB 1: THE DARK AGES ══ -->
+    <div id="tab-darkages" class="tab-panel active">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">📮</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Passwords Written on Postcards</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">Before SSH, computers talked using systems called <strong>Telnet</strong> and <strong>FTP</strong>. When you typed your password, it traveled across the internet like writing on the back of a postcard — in plain, readable text. The postcard was handed to a mailman, who showed it to people at the post office, who showed it to the delivery driver. <strong>Anyone who touched it could read your secrets.</strong></p>
+            <p class="text-slate-mid leading-relaxed">In 1995, a computer scientist in Finland named <strong>Tatu Ylönen</strong> watched a thief break into his university's network and steal thousands of passwords. He decided the postcard method had to end. He invented the Secure Shell to replace the postcard with a <em>locked steel box</em>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Three great flaws -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚠️</span> The Three Great Flaws of Telnet & FTP</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Problem</th><th>Simple Explanation</th><th>The Real Danger</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Cleartext Transmission</strong></td>
+                <td>Information sent as plain, readable text — no scrambling</td>
+                <td>Like writing your bank password on a billboard for everyone to see</td>
+              </tr>
+              <tr>
+                <td><strong>Lack of Authentication</strong></td>
+                <td>No way to prove the computer you're talking to is who it claims to be</td>
+                <td>A stranger wearing a mask pretending to be your best friend to get into your house</td>
+              </tr>
+              <tr>
+                <td><strong>No Integrity Checking</strong></td>
+                <td>No way to know if a message was changed during delivery</td>
+                <td>Sending a letter saying "Give him $10" and a thief changing it to "Give him $1,000"</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Network sniffing visual -->
+        <div class="terminal-window mb-6">
+          <div class="terminal-bar">
+            <div class="terminal-dot" style="background:#FF5F57;"></div>
+            <div class="terminal-dot" style="background:#FEBC2E;"></div>
+            <div class="terminal-dot" style="background:#28C840;"></div>
+            <span class="text-white/40 text-xs ml-3 font-mono">network-sniffer — 1993</span>
+          </div>
+          <div class="terminal-body">
+            <span class="cmt"># A bad actor runs a packet sniffer on the network...</span><br>
+            <span class="cmt"># Intercepting Telnet traffic from user@company.com</span><br><br>
+            <span class="warn">CAPTURED PACKET:</span><br>
+            &nbsp;&nbsp;Source: 192.168.1.45<br>
+            &nbsp;&nbsp;Dest:   192.168.1.1:23 (Telnet)<br>
+            &nbsp;&nbsp;Data:   <span style="color:#ff6b6b;">username: alice</span><br>
+            &nbsp;&nbsp;Data:   <span style="color:#ff6b6b;">password: MySecret123</span>  <span class="warn">← readable by anyone!</span><br><br>
+            <span class="cmt"># SSH era: the same capture yields...</span><br>
+            &nbsp;&nbsp;Data:   <span class="ok">3f8a92c1b4e7d0f5...</span> <span class="ok">← mathematically unreadable</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client-server model -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🍽️</span> The Client-Server Model: The Customer & The Kitchen</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Every SSH connection involves exactly two computers playing specific roles. Understanding this relationship is the foundation of everything else.</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Component</th><th>Analogy</th><th>Technical Name</th><th>Key Detail</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Your Computer</strong></td><td>The Customer</td><td>The SSH Client</td><td>You initiate the connection — you walk up and knock</td></tr>
+              <tr><td><strong>Remote Computer</strong></td><td>The Kitchen</td><td>The SSH Server</td><td>Always running, always waiting for authorised customers</td></tr>
+              <tr><td><strong>Waiting Program</strong></td><td>The Butler</td><td>The SSH Daemon (<code>sshd</code>)</td><td>Runs silently in background, listens 24/7</td></tr>
+              <tr><td><strong>The Digital Door</strong></td><td>Door Number 22</td><td>Port 22</td><td>Default port — can be changed for security (obscurity)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="analogy-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🍽️ <strong>Kitchen analogy:</strong> The Kitchen (SSH server) is always open and has a Butler (<code>sshd</code> daemon) standing at Door Number 22. When a Customer (your laptop) wants to enter, they call out to Door 22. The Butler checks who you are, verifies your identity, and decides whether to let you in — all before you even see the kitchen.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-darkages -->
+
+
+    <!-- ══ TAB 2: HOW SSH SOLVES IT ══ -->
+    <div id="tab-howssh" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔒</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">A Locked Steel Box Inside a Private Tunnel</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">SSH replaces the postcard with a <strong>magical steel box</strong>. Your message goes inside the box, the box is locked, and it travels through a private tunnel built specifically for that one conversation. Even if a bad actor grabs the box from the tunnel, they cannot see inside — the steel is mathematically too thick to crack.</p>
+            <p class="text-slate-mid leading-relaxed">If they try to smash the box to change the message, it will "shatter" in a way that tells the receiver immediately that it was tampered with. SSH solves all three Dark Age problems simultaneously.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Three goals -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🎯</span> SSH's Three Goals</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl mb-3">🔐</div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-2">Encryption</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Scrambles every byte into unreadable ciphertext using mathematical algorithms agreed on during the handshake. Even if intercepted, the data is worthless to an attacker.</p>
+            <div class="mt-3 px-3 py-1.5 rounded-xl bg-slate/08 border border-slate/12 text-xs text-slate-mid font-mono">Solves: Cleartext Transmission</div>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl mb-3">🪪</div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-2">Authentication</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Proves the identities of both parties. The server proves who it is via its Host Key. The client proves who they are via password or — better — a cryptographic key pair.</p>
+            <div class="mt-3 px-3 py-1.5 rounded-xl bg-slate/08 border border-slate/12 text-xs text-slate-mid font-mono">Solves: Lack of Authentication</div>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl mb-3">✅</div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-2">Integrity</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Every message includes a cryptographic "fingerprint" (MAC — Message Authentication Code). If even a single bit is changed in transit, the fingerprint fails and the message is rejected.</p>
+            <div class="mt-3 px-3 py-1.5 rounded-xl bg-slate/08 border border-slate/12 text-xs text-slate-mid font-mono">Solves: No Integrity Checking</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart: SSH vs Telnet security comparison -->
+      <div class="bg-white rounded-2xl border border-slate/10 shadow-sm p-6 md:p-8 mb-6">
+        <h3 class="font-display font-semibold text-xl text-slate mb-2 text-center">SSH vs. Telnet — Security Property Comparison</h3>
+        <p class="text-slate-light text-sm text-center mb-6">Higher score = better protection across each security dimension.</p>
+        <div class="chart-container">
+          <canvas id="securityChart"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /tab-howssh -->
+
+
+    <!-- ══ TAB 3: THE THREE-LAYER CAKE ══ -->
+    <div id="tab-layers" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🎂</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">SSH is a Three-Layer Cake</h2>
+            <p class="text-slate-mid leading-relaxed">The Secure Shell is not one simple rule — it is a <strong>layered protocol</strong>. Think of it as a three-layer cake. Each layer has a completely different job, and they stack on top of each other in a specific order. You cannot have the top layer without first baking the bottom two.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-5 mb-8">
+
+        <!-- Bottom layer -->
+        <div class="cake-layer rounded-2xl overflow-hidden border border-slate/10">
+          <div class="bg-slate px-6 py-3 flex items-center gap-3">
+            <span class="tier-badge px-3 py-1 rounded-full bg-amber/20 text-amber border border-amber/30">Layer 1 — Bottom</span>
+            <span class="text-white font-display font-semibold">Transport Layer — The Safe Foundation</span>
+          </div>
+          <div class="p-6 bg-white">
+            <p class="text-slate-mid text-sm leading-relaxed mb-4">The <strong>Transport Layer</strong> builds the secure tunnel before any credentials are ever mentioned. It runs the initial <strong>Handshake</strong> — the computers' first conversation.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div class="pro-card rounded-xl p-4">
+                <h5 class="font-bold text-slate text-xs uppercase tracking-wider mb-2">① The Identification</h5>
+                <p class="text-slate-mid text-xs leading-relaxed">The server shows its <strong>Host Key</strong> — a digital fingerprint unique to that machine. Your client checks it against your <code>known_hosts</code> "Friendship Diary" to confirm this is the same server you trusted before.</p>
+              </div>
+              <div class="pro-card rounded-xl p-4">
+                <h5 class="font-bold text-slate text-xs uppercase tracking-wider mb-2">② The Agreement</h5>
+                <p class="text-slate-mid text-xs leading-relaxed">Both computers negotiate which <strong>Encryption Algorithms</strong> they both know. They pick the strongest mutual option — like choosing to speak in the most difficult code instead of a simple substitution cipher.</p>
+              </div>
+              <div class="pro-card rounded-xl p-4">
+                <h5 class="font-bold text-slate text-xs uppercase tracking-wider mb-2">③ The Session Key</h5>
+                <p class="text-slate-mid text-xs leading-relaxed">Via <strong>Key Exchange</strong> (Diffie-Hellman), both computers independently calculate the same secret Session Key — without ever sending it over the network. The secret was never transmitted, yet both sides have it.</p>
+              </div>
+            </div>
+            <div class="analogy-card rounded-xl p-4 text-xs text-slate-mid">
+              🏗️ <strong>Analogy:</strong> This layer builds the armoured tunnel before anything sensitive is mentioned — like constructing the walls of a private meeting room before the secret negotiation begins.
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle layer -->
+        <div class="cake-layer rounded-2xl overflow-hidden border border-slate/10">
+          <div class="bg-slate-mid px-6 py-3 flex items-center gap-3">
+            <span class="tier-badge px-3 py-1 rounded-full bg-amber/20 text-amber border border-amber/30">Layer 2 — Middle</span>
+            <span class="text-white font-display font-semibold">Authentication Layer — The ID Card Check</span>
+          </div>
+          <div class="p-6 bg-white">
+            <p class="text-slate-mid text-sm leading-relaxed mb-4">Once the safe tunnel exists, the server asks: <em>"But who exactly are you?"</em> There are three ways to prove identity:</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="info-card bg-cream rounded-xl p-4">
+                <p class="tier-badge text-slate-mid mb-2">Method A</p>
+                <h5 class="font-bold text-slate text-sm mb-1">🔤 Password</h5>
+                <p class="text-slate-mid text-xs leading-relaxed">The basic method. You type your password. Because the Transport Layer already built the encrypted tunnel, the password travels scrambled — but if it's weak or reused, it's still the weakest link.</p>
+              </div>
+              <div class="info-card rounded-xl p-4" style="background:linear-gradient(135deg,#FFF8EE,#fff);border-color:rgba(255,153,0,0.3);">
+                <p class="tier-badge text-amber mb-2">Method B — PRO</p>
+                <h5 class="font-bold text-slate text-sm mb-1">🗝️ Public-Key Auth</h5>
+                <p class="text-slate-mid text-xs leading-relaxed">The professional way. Your private key never leaves your machine. The server uses a cryptographic challenge to verify you hold the matching key. Nothing to steal from the wire.</p>
+              </div>
+              <div class="info-card bg-cream rounded-xl p-4">
+                <p class="tier-badge text-slate-mid mb-2">Method C</p>
+                <h5 class="font-bold text-slate text-sm mb-1">💬 Keyboard-Interactive</h5>
+                <p class="text-slate-mid text-xs leading-relaxed">A flexible challenge-response system. The server can ask a series of questions — including one-time codes from an authenticator app for multi-factor authentication (MFA).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top layer -->
+        <div class="cake-layer rounded-2xl overflow-hidden border border-slate/10">
+          <div class="bg-amber px-6 py-3 flex items-center gap-3">
+            <span class="tier-badge px-3 py-1 rounded-full bg-white/20 text-white border border-white/30">Layer 3 — Top</span>
+            <span class="text-white font-display font-semibold">Connection Layer — The Multi-Tasking Pipe</span>
+          </div>
+          <div class="p-6 bg-white">
+            <p class="text-slate-mid text-sm leading-relaxed mb-4">The top layer's job is <strong>Multiplexing</strong> — taking one single connection and splitting it into many separate "channels" simultaneously. Think of it as one large straw that can carry soda, air, and a secret note all at once.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="info-card bg-white rounded-xl p-4 text-center">
+                <p class="text-2xl mb-1">⌨️</p>
+                <p class="font-bold text-slate text-xs">Shell Channel</p>
+                <p class="text-slate-light text-xs mt-1">Type commands into the remote terminal</p>
+              </div>
+              <div class="info-card bg-white rounded-xl p-4 text-center">
+                <p class="text-2xl mb-1">📁</p>
+                <p class="font-bold text-slate text-xs">File Transfer Channel</p>
+                <p class="text-slate-light text-xs mt-1">Move files back and forth (SCP/SFTP)</p>
+              </div>
+              <div class="info-card bg-white rounded-xl p-4 text-center">
+                <p class="text-2xl mb-1">🖥️</p>
+                <p class="font-bold text-slate text-xs">X11 Forwarding Channel</p>
+                <p class="text-slate-light text-xs mt-1">Run graphical apps from the remote machine on your screen</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-layers -->
+
+
+    <!-- ══ TAB 4: KEYS & ENCRYPTION ══ -->
+    <div id="tab-keys" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔓</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">A Padlock Anyone Can Lock — Only You Can Open</h2>
+            <p class="text-slate-mid leading-relaxed">SSH uses <strong>Asymmetric Encryption</strong> — a lock that uses two mathematically linked but completely different keys. You can hand out a million copies of your padlock (public key) to every server in the world. Only the one physical key (private key) hidden on your machine can ever open them. This is the secret sauce that makes SSH so much better than passwords.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key pair visual -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🔑</span> The Key Pair</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+
+          <div class="key-card rounded-2xl bg-white p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl">🔓</div>
+              <div>
+                <p class="tier-badge text-amber mb-0.5">Public Key</p>
+                <p class="font-display font-bold text-lg text-slate">The Padlock</p>
+              </div>
+            </div>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">File: <code>~/.ssh/id_rsa.pub</code><br/>A digital padlock. Make a million copies. Give them to anyone. Toss them all over the internet. <strong>A padlock can only lock — it cannot unlock anything.</strong> You add this to every server you want to visit by placing it in the server's <code>~/.ssh/authorized_keys</code> file.</p>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-2 font-mono">id_rsa.pub</span></div>
+              <div class="terminal-body" style="font-size:0.65rem;">
+                <span class="ok">ssh-rsa AAAAB3NzaC1yc2EAAAA...</span><br>
+                <span class="ok">...QDBd8+kfHJx7v5p alice@laptop</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="key-card rounded-2xl bg-white p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-slate flex items-center justify-center text-2xl">🗝️</div>
+              <div>
+                <p class="tier-badge text-slate-mid mb-0.5">Private Key</p>
+                <p class="font-display font-bold text-lg text-slate">The Secret Key</p>
+              </div>
+            </div>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">File: <code>~/.ssh/id_rsa</code><br/>The <em>only</em> key in the world that opens your padlocks. <strong>Never, ever share this file.</strong> Protect it with a <strong>Passphrase</strong> (a password that protects your key — like a combination lock on the safe where you keep your key). Permissions must be set to <code>chmod 600</code>.</p>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-2 font-mono">id_rsa — PRIVATE</span></div>
+              <div class="terminal-body" style="font-size:0.65rem;">
+                <span style="color:#ff6b6b;">-----BEGIN RSA PRIVATE KEY-----</span><br>
+                <span style="color:#ff6b6b;">MIIEowIBAAKCAQEA3Xl8... [KEEP SECRET]</span><br>
+                <span style="color:#ff6b6b;">-----END RSA PRIVATE KEY-----</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Challenge handshake -->
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🤝</span> The Challenge Handshake — How Login Actually Works</h2>
+          <div class="pro-card rounded-2xl p-6 mb-5">
+            <div class="space-y-3 text-sm">
+              <div class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-amber flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span><p class="text-slate-mid">Server takes a random message, locks it in your padlock (encrypts with your <strong>Public Key</strong>), and sends you the locked box.</p></div>
+              <div class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-amber flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span><p class="text-slate-mid">Only you — with your <strong>Private Key</strong> — can decrypt and open the box to read the random message inside.</p></div>
+              <div class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-amber flex items-center justify-center text-white text-xs font-bold flex-shrink-0">3</span><p class="text-slate-mid">You send the message back to the server. The server knows only the holder of the matching private key could have opened it.</p></div>
+              <div class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</span><p class="text-slate-mid"><strong>Your Private Key never traveled over the internet.</strong> It stayed on your machine. A thief sniffing the network captured nothing useful.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trapdoor function -->
+        <div class="rounded-2xl bg-slate p-6 text-white">
+          <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">The Math Behind the Magic</p>
+          <h4 class="font-display font-semibold text-xl mb-3">Trapdoor Functions — Easy One Way, Impossible the Other</h4>
+          <p class="text-slate-light text-sm leading-relaxed mb-4">SSH keys are built on Trapdoor Functions — maths that is trivial in one direction and computationally impossible to reverse.</p>
+          <div class="bg-white/05 rounded-xl p-5 border border-white/10 font-mono text-sm mb-4">
+            <span class="text-amber">Easy direction:</span><br>
+            &nbsp;&nbsp;7 × 13 = <span class="text-green-400">91</span> &nbsp;&nbsp;<span class="text-slate-light text-xs">(milliseconds)</span><br><br>
+            <span class="text-amber">Hard direction:</span><br>
+            &nbsp;&nbsp;Given <span class="text-green-400">91</span>, find the two prime factors = ??? &nbsp;&nbsp;<span style="color:#ff6b6b;" class="text-xs">(much harder)</span><br><br>
+            <span class="text-slate-light text-xs">Now make the numbers 2,048 digits long...</span><br>
+            <span style="color:#ff6b6b;">Reversing this would take longer than the age of the universe.</span>
+          </div>
+          <p class="text-slate-light text-sm">The <strong>Public Key</strong> is like the number <code class="bg-white/10 text-white">91</code>. The <strong>Private Key</strong> is the secret prime factors <code class="bg-white/10 text-white">7</code> and <code class="bg-white/10 text-white">13</code>. Anyone can see 91; no one can work backwards to find 7 and 13 in a human lifetime.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-keys -->
+
+
+    <!-- ══ TAB 5: SSH CLIENTS ══ -->
+    <div id="tab-clients" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">💻</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Your Steering Wheel for SSH</h2>
+            <p class="text-slate-mid leading-relaxed">To use SSH, you need a <strong>client program</strong> — the software that acts as the steering wheel for your secure connection. There are three major options, each suited for a different type of user and workflow. A pro knows when to use each one.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+        <div class="info-card bg-white rounded-2xl p-6 flex flex-col">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-slate flex items-center justify-center text-xl">⌨️</div>
+            <div>
+              <p class="tier-badge text-amber mb-0.5">Industry Standard</p>
+              <h3 class="font-display font-bold text-lg text-slate">OpenSSH</h3>
+            </div>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4 flex-1">Built-in to macOS, Linux, and modern Windows 10/11. Lives in the Terminal — no buttons or windows, just commands. The fastest, most reliable, and most professional tool. This is what almost every expert uses every single day.</p>
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 text-xs"><span class="text-green-600">✓</span><span class="text-slate-mid">Free, pre-installed everywhere</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="text-green-600">✓</span><span class="text-slate-mid">Scriptable and automatable</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="text-slate-light">○</span><span class="text-slate-mid">No GUI — terminal only</span></div>
+          </div>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6 flex flex-col">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-slate-light/20 flex items-center justify-center text-xl">🪟</div>
+            <div>
+              <p class="tier-badge text-slate-mid mb-0.5">Classic Legend</p>
+              <h3 class="font-display font-bold text-lg text-slate">PuTTY</h3>
+            </div>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4 flex-1">A free Windows SSH client that has been around for 20+ years. Lightweight, stable, and rarely breaks. However, it has an outdated interface and requires companion tools: <code>PuTTYgen</code> to make keys and <code>Pageant</code> to hold them in memory. Each server opens a new window — messy for managing many connections.</p>
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 text-xs"><span class="text-green-600">✓</span><span class="text-slate-mid">Extremely stable, free</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="text-slate-light">○</span><span class="text-slate-mid">Outdated UI, no tabs</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="text-slate-light">○</span><span class="text-slate-mid">Needs PuTTYgen + Pageant</span></div>
+          </div>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6 flex flex-col">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-xl">🚀</div>
+            <div>
+              <p class="tier-badge text-amber mb-0.5">Modern Choice</p>
+              <h3 class="font-display font-bold text-lg text-slate">Termius</h3>
+            </div>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4 flex-1">Designed for professionals managing many servers. Uses browser-style <strong>Tabs</strong> so you can have 10 servers open in one window. Syncs your server list between your computer and phone. Teams can share a secure <strong>Vault</strong> of server addresses and keys together.</p>
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 text-xs"><span class="text-green-600">✓</span><span class="text-slate-mid">Tabbed, synced, mobile app</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="text-green-600">✓</span><span class="text-slate-mid">Team vault sharing</span></div>
+            <div class="flex items-center gap-2 text-xs"><span class="text-slate-light">○</span><span class="text-slate-mid">Free & paid tiers</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Comparison table -->
+      <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm">
+        <table class="oc-table">
+          <thead><tr><th>Feature</th><th>OpenSSH</th><th>PuTTY</th><th>Termius</th></tr></thead>
+          <tbody>
+            <tr><td>Interface Type</td><td>Text-only Terminal</td><td>Graphical (Old Style)</td><td>Graphical (Modern)</td></tr>
+            <tr><td>Tabbed Sessions</td><td class="text-red-500">✗ Separate windows</td><td class="text-red-500">✗ Separate windows</td><td class="text-green-700 font-semibold">✓ Like a browser</td></tr>
+            <tr><td>Key Management</td><td>Manual commands</td><td>Needs PuTTYgen</td><td class="text-green-700 font-semibold">✓ Built-in</td></tr>
+            <tr><td>Mobile App</td><td class="text-red-500">✗ No</td><td class="text-red-500">✗ No</td><td class="text-green-700 font-semibold">✓ iOS & Android</td></tr>
+            <tr><td>Cost</td><td class="text-green-700 font-semibold">Free</td><td class="text-green-700 font-semibold">Free</td><td>Free & Paid</td></tr>
+            <tr><td>Best For</td><td>Pros, scripting, automation</td><td>Legacy Windows users</td><td>Multi-server teams</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /tab-clients -->
+
+
+    <!-- ══ TAB 6: COMMANDS & FLAGS ══ -->
+    <div id="tab-commands" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">⌨️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Master Command & Its Power Switches</h2>
+            <p class="text-slate-mid leading-relaxed">A pro at SSH cannot rely only on buttons. Mastering the <strong>command syntax</strong> and <strong>flags</strong> (special letters that change how SSH behaves) is what separates a beginner from a professional. Adding a single letter to the command can completely change what it does.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic connection -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔌</span> The Basic Connection</h2>
+        <div class="terminal-window mb-4">
+          <div class="terminal-bar">
+            <div class="terminal-dot" style="background:#FF5F57;"></div>
+            <div class="terminal-dot" style="background:#FEBC2E;"></div>
+            <div class="terminal-dot" style="background:#28C840;"></div>
+            <span class="text-white/40 text-xs ml-3 font-mono">terminal</span>
+          </div>
+          <div class="terminal-body">
+            <span class="cmt"># Syntax: ssh [user]@[host]</span><br><br>
+            <span class="cmd">ssh</span> <span class="arg">alice</span>@<span class="arg">192.168.1.10</span><br><br>
+            <span class="cmt"># alice    = your username on the remote machine</span><br>
+            <span class="cmt"># 192.168.1.10 = the IP address (or domain name) of the server</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flags table -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🚩</span> Essential Flags for Professional Use</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Flag</th><th>Name</th><th>What It Does & When to Use It</th></tr></thead>
+            <tbody>
+              <tr><td><code>-p 2222</code></td><td>Port</td><td>Use if the SSH butler stands at a non-standard door. E.g. <code>ssh -p 2222 user@host</code></td></tr>
+              <tr><td><code>-i ~/.ssh/key</code></td><td>Identity</td><td>Specify exactly which key file to use for this connection. E.g. <code>ssh -i ~/.ssh/work_key user@host</code></td></tr>
+              <tr><td><code>-v</code> / <code>-vvv</code></td><td>Verbose</td><td>Debug mode — prints every step of the connection. Use <code>-vvv</code> for maximum detail when troubleshooting failures</td></tr>
+              <tr><td><code>-C</code></td><td>Compression</td><td>Compresses all data in transit. Useful on slow connections to make the session feel faster</td></tr>
+              <tr><td><code>-N</code></td><td>No Command</td><td>"Build the tunnel but don't give me a shell." Essential for port forwarding where you only need the pipe, not a terminal</td></tr>
+              <tr><td><code>-f</code></td><td>Background</td><td>Hides the SSH connection in the background so your terminal stays free for other work</td></tr>
+              <tr><td><code>-A</code></td><td>Agent Forwarding</td><td>Carries your authentication keys to the next server, enabling seamless "hop" from server to server without re-entering credentials</td></tr>
+              <tr><td><code>-X</code></td><td>X11 Forwarding</td><td>Sends a visual graphical window (like a file browser) from the remote machine to your local screen</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Combined examples -->
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="terminal-dot" style="background:#FF5F57;"></div>
+            <div class="terminal-dot" style="background:#FEBC2E;"></div>
+            <div class="terminal-dot" style="background:#28C840;"></div>
+            <span class="text-white/40 text-xs ml-3 font-mono">pro examples</span>
+          </div>
+          <div class="terminal-body">
+            <span class="cmt"># Connect on a non-standard port with a specific key</span><br>
+            <span class="cmd">ssh</span> <span class="flag">-p 2222</span> <span class="flag">-i</span> <span class="arg">~/.ssh/work_key</span> <span class="arg">alice</span>@<span class="arg">prod-server.com</span><br><br>
+            <span class="cmt"># Debug a failing connection (maximum verbosity)</span><br>
+            <span class="cmd">ssh</span> <span class="flag">-vvv</span> <span class="arg">alice</span>@<span class="arg">192.168.1.10</span><br><br>
+            <span class="cmt"># Build tunnel only (no shell) + send to background</span><br>
+            <span class="cmd">ssh</span> <span class="flag">-N</span> <span class="flag">-f</span> <span class="flag">-L</span> <span class="arg">8080:localhost:80</span> <span class="arg">alice</span>@<span class="arg">server.com</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-commands -->
+
+
+    <!-- ══ TAB 7: KEY MANAGEMENT ══ -->
+    <div id="tab-keymgmt" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔧</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Key Factory, the Lock Installer, and the Key Ring</h2>
+            <p class="text-slate-mid leading-relaxed">Passwordless login is the gold standard of professional SSH. Setting it up requires three tools working together: <code>ssh-keygen</code> creates your padlock and key, <code>ssh-copy-id</code> installs the padlock on the server, and <code>ssh-agent</code> holds your unlocked key all day so you don't have to type your passphrase every time.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 mb-8">
+
+        <!-- ssh-keygen -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🏭</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">ssh-keygen</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Step 1 — Create Keys</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-4">The Key Factory. Generates your public/private key pair using a specified cryptographic algorithm and key length.</p>
+              <div class="terminal-window">
+                <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">ssh-keygen</span></div>
+                <div class="terminal-body">
+                  <span class="cmd">ssh-keygen</span> <span class="flag">-t</span> <span class="arg">rsa</span> <span class="flag">-b</span> <span class="arg">4096</span><br><br>
+                  <span class="cmt"># -t rsa    → use the RSA algorithm</span><br>
+                  <span class="cmt"># -b 4096   → make the key 4096 bits (very strong)</span><br><br>
+                  <span class="ok">Enter file in which to save the key (~/.ssh/id_rsa):</span> <span class="warn">[press Enter]</span><br>
+                  <span class="ok">Enter passphrase (empty for no passphrase):</span> <span class="warn">MyStr0ngPassphrase!</span><br><br>
+                  <span class="ok">Your identification has been saved in ~/.ssh/id_rsa</span><br>
+                  <span class="ok">Your public key has been saved in ~/.ssh/id_rsa.pub</span>
+                </div>
+              </div>
+              <div class="mt-3 rounded-xl bg-amber-pale border border-amber/25 p-3 text-xs text-slate-mid">
+                ⚠️ <strong>Always use a passphrase for professional work.</strong> If someone steals your laptop and your key has no passphrase, they have access to every server. The passphrase is the combination lock on the safe where you keep your key.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ssh-copy-id -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">📬</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">ssh-copy-id</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Step 2 — Install Padlock</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-4">The Lock Installer. Knocks on the server's door using your password <em>one last time</em>, then appends your public key to the server's <code>~/.ssh/authorized_keys</code> Approved Visitors list. After this, you'll never need a password for that server again.</p>
+              <div class="terminal-window">
+                <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">ssh-copy-id</span></div>
+                <div class="terminal-body">
+                  <span class="cmd">ssh-copy-id</span> <span class="flag">-i</span> <span class="arg">~/.ssh/id_rsa.pub</span> <span class="arg">alice</span>@<span class="arg">192.168.1.10</span><br><br>
+                  <span class="ok">Number of key(s) added: 1</span><br>
+                  <span class="ok">Now try logging into the machine with: ssh alice@192.168.1.10</span><br>
+                  <span class="cmt"># No password ever needed again ✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ssh-agent -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🔑</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">ssh-agent</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Step 3 — The Key Ring</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-4">The Key Fob for your keys. You unlock your private key once when you start your day. The agent holds it in memory — you never type your passphrase again until you reboot. Type it once, connect to a hundred servers.</p>
+              <div class="terminal-window">
+                <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">ssh-agent</span></div>
+                <div class="terminal-body">
+                  <span class="cmt"># Start the agent (usually auto-started on login)</span><br>
+                  <span class="cmd">eval</span> <span class="arg">$(ssh-agent -s)</span><br><br>
+                  <span class="cmt"># Add your key to the agent's memory</span><br>
+                  <span class="cmd">ssh-add</span> <span class="arg">~/.ssh/id_rsa</span><br><br>
+                  <span class="ok">Enter passphrase for ~/.ssh/id_rsa:</span> <span class="warn">MyStr0ngPassphrase!</span><br>
+                  <span class="ok">Identity added: ~/.ssh/id_rsa (alice@laptop)</span><br><br>
+                  <span class="cmt"># Now connect to servers all day — no passphrase prompts</span><br>
+                  <span class="cmd">ssh</span> <span class="arg">alice</span>@<span class="arg">server1.com</span> <span class="ok">← instant</span><br>
+                  <span class="cmd">ssh</span> <span class="arg">alice</span>@<span class="arg">server2.com</span> <span class="ok">← instant</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-keymgmt -->
+
+
+    <!-- ══ TAB 8: PORT FORWARDING ══ -->
+    <div id="tab-tunneling" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🕳️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Secret Passages Through the Internet</h2>
+            <p class="text-slate-mid leading-relaxed">The most magical trick a pro can do with SSH is <strong>Port Forwarding</strong> (also called Tunneling). This is like building a secret, invisible pipe through the internet to reach something that is hidden behind a wall. There are three types, each going in a different direction.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-8 mb-6">
+
+        <!-- Local forwarding -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-4 flex-wrap">
+            <span class="tier-badge px-3 py-1.5 rounded-xl bg-amber-pale text-amber border border-amber/30">-L Flag</span>
+            <h3 class="font-display font-bold text-xl text-slate">Local Port Forwarding</h3>
+            <span class="text-sm text-slate-light">Bring the hidden thing to you</span>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">A private database exists inside the server, hidden behind a firewall. You can't reach it from your laptop — but you have SSH access to the server. Local forwarding builds a pipe from your laptop directly to that hidden database through the SSH tunnel.</p>
+
+          <!-- Diagram -->
+          <div class="bg-slate rounded-xl p-5 mb-4 flex flex-wrap items-center justify-center gap-2 text-sm font-mono">
+            <div class="text-center"><div class="bg-amber/20 border border-amber/40 rounded-lg px-3 py-2 text-amber">Your Laptop<br><span class="text-xs">localhost:8080</span></div></div>
+            <span class="pipe-arrow">→</span>
+            <div class="text-center"><div class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white/80">SSH Tunnel<br><span class="text-xs">encrypted</span></div></div>
+            <span class="pipe-arrow">→</span>
+            <div class="text-center"><div class="bg-green-900/40 border border-green-500/40 rounded-lg px-3 py-2 text-green-300">SSH Server<br><span class="text-xs">gateway</span></div></div>
+            <span class="pipe-arrow">→</span>
+            <div class="text-center"><div class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white/80">Private DB<br><span class="text-xs">port 80</span></div></div>
+          </div>
+
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">local forwarding</span></div>
+            <div class="terminal-body">
+              <span class="cmd">ssh</span> <span class="flag">-L</span> <span class="arg">8080</span>:<span class="arg">internal-db:80</span> <span class="arg">alice</span>@<span class="arg">server.com</span><br><br>
+              <span class="cmt"># 8080         = the door on YOUR laptop</span><br>
+              <span class="cmt"># internal-db  = the hidden service (only the server can reach it)</span><br>
+              <span class="cmt"># 80           = the door on the hidden service</span><br><br>
+              <span class="ok"># Now open: http://localhost:8080</span><br>
+              <span class="ok"># You're looking at internal-db through the tunnel ✓</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remote forwarding -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-4 flex-wrap">
+            <span class="tier-badge px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200">-R Flag</span>
+            <h3 class="font-display font-bold text-xl text-slate">Remote Port Forwarding</h3>
+            <span class="text-sm text-slate-light">Show them something on your machine</span>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">The opposite direction. You're building a website on your laptop and want your team on the server to preview it — without deploying it. Remote forwarding builds a pipe <em>from</em> the server <em>back</em> to your laptop.</p>
+
+          <div class="bg-slate rounded-xl p-5 mb-4 flex flex-wrap items-center justify-center gap-2 text-sm font-mono">
+            <div class="text-center"><div class="bg-amber/20 border border-amber/40 rounded-lg px-3 py-2 text-amber">Your Laptop<br><span class="text-xs">port 3000</span></div></div>
+            <span class="pipe-arrow" style="transform:scaleX(-1);display:inline-block;">→</span>
+            <div class="text-center"><div class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white/80">SSH Tunnel<br><span class="text-xs">reversed</span></div></div>
+            <span class="pipe-arrow" style="transform:scaleX(-1);display:inline-block;">→</span>
+            <div class="text-center"><div class="bg-green-900/40 border border-green-500/40 rounded-lg px-3 py-2 text-green-300">SSH Server<br><span class="text-xs">port 9090</span></div></div>
+          </div>
+
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">remote forwarding</span></div>
+            <div class="terminal-body">
+              <span class="cmd">ssh</span> <span class="flag">-R</span> <span class="arg">9090</span>:<span class="arg">localhost:3000</span> <span class="arg">alice</span>@<span class="arg">server.com</span><br><br>
+              <span class="cmt"># Anyone on server.com visiting localhost:9090</span><br>
+              <span class="cmt"># sees your local app running on port 3000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic forwarding -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-4 flex-wrap">
+            <span class="tier-badge px-3 py-1.5 rounded-xl bg-slate/10 text-slate-mid border border-slate/15">-D Flag</span>
+            <h3 class="font-display font-bold text-xl text-slate">Dynamic Port Forwarding</h3>
+            <span class="text-sm text-slate-light">The master SOCKS proxy</span>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">The Pro Master trick. Instead of building a pipe to <em>one specific place</em>, this turns your SSH connection into a <strong>SOCKS Proxy</strong> — a general-purpose tunnel that can reach <em>anywhere</em> the server can reach. Like a straw that can reach into any glass in the kitchen.</p>
+
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">dynamic forwarding — SOCKS proxy</span></div>
+            <div class="terminal-body">
+              <span class="cmd">ssh</span> <span class="flag">-D</span> <span class="arg">1080</span> <span class="flag">-N</span> <span class="flag">-f</span> <span class="arg">alice</span>@<span class="arg">server.com</span><br><br>
+              <span class="cmt"># -D 1080  → open a SOCKS proxy on local port 1080</span><br>
+              <span class="cmt"># -N       → no shell, just the tunnel</span><br>
+              <span class="cmt"># -f       → run in background</span><br><br>
+              <span class="ok"># Point your browser's SOCKS proxy to localhost:1080</span><br>
+              <span class="ok"># All browser traffic now routes through the server ✓</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-tunneling -->
+
+
+    <!-- ══ TAB 9: FILE TRANSFER ══ -->
+    <div id="tab-filetransfer" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">📦</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Moving the Digital Groceries</h2>
+            <p class="text-slate-mid leading-relaxed">SSH isn't just for typing commands — it's also the most secure way to move files between computers. Three tools are built on the SSH protocol: <strong>SCP</strong> (fast single-file delivery), <strong>SFTP</strong> (interactive moving company), and <strong>SSHFS</strong> (the god-level trick that makes a remote folder appear on your desktop like a USB drive).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 mb-6">
+
+        <!-- SCP -->
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🚚</div>
+            <div>
+              <p class="tier-badge text-amber mb-0.5">Tool 1</p>
+              <h3 class="font-display font-bold text-xl text-slate">SCP — Secure Copy</h3>
+            </div>
+            <span class="text-xs text-slate-light">The fast delivery truck — single file, point-to-point</span>
+          </div>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">scp</span></div>
+            <div class="terminal-body">
+              <span class="cmt"># Send a file TO the server</span><br>
+              <span class="cmd">scp</span> <span class="arg">cake_recipe.txt</span> <span class="arg">alice</span>@<span class="arg">server:/home/alice/</span><br><br>
+              <span class="cmt"># Get a file FROM the server</span><br>
+              <span class="cmd">scp</span> <span class="arg">alice</span>@<span class="arg">server:/home/alice/cake_recipe.txt</span> <span class="arg">./</span><br><br>
+              <span class="cmt"># Copy an entire folder (recursive)</span><br>
+              <span class="cmd">scp</span> <span class="flag">-r</span> <span class="arg">./my_project/</span> <span class="arg">alice</span>@<span class="arg">server:/var/www/</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SFTP -->
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🏢</div>
+            <div>
+              <p class="tier-badge text-amber mb-0.5">Tool 2</p>
+              <h3 class="font-display font-bold text-xl text-slate">SFTP — Secure File Transfer Protocol</h3>
+            </div>
+            <span class="text-xs text-slate-light">The interactive moving company — browse, pick, transfer</span>
+          </div>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">When you start SFTP, you enter an interactive mode where you can walk around the server's folders and pick exactly which files to move. Like walking into a warehouse with a clipboard rather than placing a delivery order.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">sftp session</span></div>
+            <div class="terminal-body">
+              <span class="cmd">sftp</span> <span class="arg">alice</span>@<span class="arg">server.com</span><br>
+              <span class="ok">Connected to server.com.</span><br>
+              <span class="ok">sftp&gt;</span> <span class="cmd">ls</span><br>
+              <span class="arg">documents  logs  uploads</span><br>
+              <span class="ok">sftp&gt;</span> <span class="cmd">cd</span> <span class="arg">documents</span><br>
+              <span class="ok">sftp&gt;</span> <span class="cmd">get</span> <span class="arg">report.pdf</span>   <span class="cmt"># download to local</span><br>
+              <span class="ok">sftp&gt;</span> <span class="cmd">put</span> <span class="arg">invoice.pdf</span>  <span class="cmt"># upload to server</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SSHFS -->
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <div class="w-12 h-12 rounded-xl bg-slate flex items-center justify-center text-2xl flex-shrink-0">⚡</div>
+            <div>
+              <p class="tier-badge text-slate-mid mb-0.5">Tool 3 — God Level</p>
+              <h3 class="font-display font-bold text-xl text-slate">SSHFS — SSH File System</h3>
+            </div>
+            <span class="text-xs text-slate-light">Mounts a remote folder as a local drive</span>
+          </div>
+          <div class="analogy-card rounded-xl p-4 mb-4 text-sm text-slate-mid">
+            🔌 <strong>USB Drive analogy:</strong> SSHFS makes a folder from a computer a thousand miles away appear on your laptop as if it were a USB drive plugged into the side. You can open the server's files directly in Photoshop, VS Code, or any other local application — with all changes saved back to the server in real time.
+          </div>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">sshfs</span></div>
+            <div class="terminal-body">
+              <span class="cmt"># Mount the remote /var/www folder to your local ~/remote</span><br>
+              <span class="cmd">sshfs</span> <span class="arg">alice</span>@<span class="arg">server:/var/www</span> <span class="arg">~/remote_site</span><br><br>
+              <span class="ok"># Now ~/remote_site IS the server's /var/www folder</span><br>
+              <span class="ok"># Edit files locally, changes save directly to server ✓</span><br><br>
+              <span class="cmt"># Unmount when done</span><br>
+              <span class="cmd">umount</span> <span class="arg">~/remote_site</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-filetransfer -->
+
+
+    <!-- ══ TAB 10: CONFIG FILE & TERMINAL ══ -->
+    <div id="tab-protools" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">📖</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Your Speed-Dial Address Book & Terminal Cheat Sheet</h2>
+            <p class="text-slate-mid leading-relaxed">When you become a professional, you will manage dozens of servers. No one memorises 20 IP addresses, usernames, ports, and key files. The <strong>SSH Config file</strong> is your personal address book — type a short nickname and SSH fills in all the details automatically. Pair that with core terminal commands and you can manage the world's infrastructure from one window.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Config file -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📋</span> The SSH Config File — Your Address Book</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Location: <code>~/.ssh/config</code>. Create it if it doesn't exist. Each entry defines an alias and its full connection details.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-slate-light font-bold mb-2">Without Config — Every. Single. Time.</p>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+              <div class="terminal-body" style="font-size:0.72rem;">
+                <span class="warn">ssh -p 2222 -i ~/.ssh/work_key bob@192.168.1.5</span><br>
+                <span class="warn">ssh -p 4422 -i ~/.ssh/bakery_key alice@bakery.com</span><br><br>
+                <span class="cmt"># Remembering all this = headaches</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-slate-light font-bold mb-2">With Config — Clean & Fast</p>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+              <div class="terminal-body" style="font-size:0.72rem;">
+                <span class="cmd">ssh</span> <span class="ok">my-favorite-kitchen</span><br>
+                <span class="cmd">ssh</span> <span class="ok">the-bakery</span><br><br>
+                <span class="cmt"># SSH looks up the alias and fills</span><br>
+                <span class="cmt"># in port, key, user automatically ✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config file example -->
+        <div class="terminal-window mb-4">
+          <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">~/.ssh/config</span></div>
+          <div class="terminal-body">
+            <span class="ok">Host</span> <span class="arg">my-favorite-kitchen</span><br>
+            &nbsp;&nbsp;<span class="flag">HostName</span>     <span class="arg">192.168.1.5</span><br>
+            &nbsp;&nbsp;<span class="flag">User</span>         <span class="arg">bob</span><br>
+            &nbsp;&nbsp;<span class="flag">Port</span>         <span class="arg">2222</span><br>
+            &nbsp;&nbsp;<span class="flag">IdentityFile</span> <span class="arg">~/.ssh/work_key</span><br><br>
+            <span class="ok">Host</span> <span class="arg">the-bakery</span><br>
+            &nbsp;&nbsp;<span class="flag">HostName</span>     <span class="arg">bakery.com</span><br>
+            &nbsp;&nbsp;<span class="flag">User</span>         <span class="arg">alice</span><br>
+            &nbsp;&nbsp;<span class="flag">IdentityFile</span> <span class="arg">~/.ssh/bakery_key</span><br><br>
+            <span class="ok">Host</span> <span class="arg">*</span>  <span class="cmt"># applies to ALL connections</span><br>
+            &nbsp;&nbsp;<span class="flag">ServerAliveInterval</span> <span class="arg">60</span>  <span class="cmt"># keep connection alive</span><br>
+            &nbsp;&nbsp;<span class="flag">AddKeysToAgent</span>      <span class="arg">yes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal commands -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⌨️</span> Essential Terminal Commands — Once You're In</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Command</th><th>Simple Meaning</th><th>Pro Usage</th></tr></thead>
+            <tbody>
+              <tr><td><code>ls</code></td><td>List — see what's on the counter</td><td><code>ls -la</code> shows hidden files (starting with a dot) + permissions</td></tr>
+              <tr><td><code>cd</code></td><td>Change Directory — walk into another room</td><td><code>cd ..</code> goes back one level; <code>cd ~</code> returns home</td></tr>
+              <tr><td><code>pwd</code></td><td>Print Working Directory — "where am I?"</td><td>Shows your full current path — use when lost in deep folders</td></tr>
+              <tr><td><code>mkdir</code></td><td>Make Directory — build a new cabinet</td><td><code>mkdir -p a/b/c</code> creates the full nested path at once</td></tr>
+              <tr><td><code>touch</code></td><td>Create a new empty file</td><td>Also updates a file's "last modified" timestamp</td></tr>
+              <tr><td><code>rm</code></td><td>Remove — throw in the trash</td><td>⚠️ <strong>No undo on a server.</strong> Use <code>rm -rf</code> with extreme caution</td></tr>
+              <tr><td><code>cat</code></td><td>Concatenate — peek inside a file</td><td>View file contents without an editor; pipe into <code>grep</code></td></tr>
+              <tr><td><code>grep</code></td><td>Search — find a specific word in files</td><td><code>grep -r "ERROR" ./logs/</code> searches all log files recursively</td></tr>
+              <tr><td><code>top</code></td><td>Show which programs are eating CPU/RAM</td><td>Press <code>q</code> to quit; use <code>htop</code> for a coloured version</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Conclusion panel -->
+      <div class="rounded-2xl bg-slate p-8 text-white">
+        <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Summary — Security is a Journey</p>
+        <h2 class="font-display font-bold text-2xl md:text-3xl mb-4">The Professional's SSH Principles</h2>
+        <p class="text-slate-light leading-relaxed mb-5">The evolution from Telnet to SSH represents more than a change in technology — it represents the birth of <strong class="text-white">Defence in Depth</strong>. A professional uses SSH with four guiding principles:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 text-sm">
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Never trust the first knock:</strong> Always verify the Host Key when connecting to a new server</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Protect your physical key:</strong> Use a strong passphrase; never share your Private Key file, ever</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Automate with wisdom:</strong> Use the config file and ssh-agent for speed — never sacrifice security for convenience</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Use the secret pipes:</strong> Master port forwarding to keep your most sensitive data hidden behind server walls</span></div>
+        </div>
+        <p class="text-slate-light text-sm leading-relaxed mb-6">Whether you're moving files with SCP, building tunnels with <code class="bg-white/10 text-white">-L</code>, or managing hundreds of servers with a tidy config file — you are now using the same secret codes that protect the world's most important infrastructure.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="Cloud_Fundamentals.html" class="px-4 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors">← Cloud Fundamentals</a>
+          <a href="AWS-S3.html"             class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">Read: AWS S3 →</a>
+          <a href="index.html"              class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← All Topics</a>
+        </div>
+      </div>
+
+    </div><!-- /tab-protools -->
+
+  </main>
+</div>
+
+
+<!-- ═══════════════════════════ FOOTER (preserved exactly) ═══════════════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span>Built with ❤️ by</span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+          Anwaar
+        </span>
+        <span>· No jargon, just clarity.</span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-5">
+      <a href="#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+
+  </div>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* Mobile menu */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* Reading progress */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('read-progress').style.width = (scrolled * 100) + '%';
+    document.getElementById('navbar').style.boxShadow =
+      doc.scrollTop > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* Tab switching */
+  function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b  => b.classList.toggle('active', b.dataset.tab === id));
+    document.querySelectorAll('.toc-link').forEach(l  => l.classList.toggle('active', l.dataset.tab === id));
+    if (id === 'howssh') setTimeout(renderSecurityChart, 150);
+  }
+
+  /* Security radar/bar chart */
+  let secChartInstance = null;
+  function renderSecurityChart() {
+    const ctx = document.getElementById('securityChart');
+    if (!ctx) return;
+    if (secChartInstance) secChartInstance.destroy();
+
+    secChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Confidentiality', 'Authentication', 'Integrity', 'Non-repudiation', 'Replay Protection'],
+        datasets: [
+          {
+            label: 'Telnet / FTP (Before SSH)',
+            data: [0, 1, 0, 0, 0],
+            backgroundColor: 'rgba(107,127,145,0.70)',
+            borderColor: '#6B7F91',
+            borderRadius: 6,
+            borderWidth: 1.5,
+          },
+          {
+            label: 'SSH (Modern Standard)',
+            data: [10, 10, 10, 9, 10],
+            backgroundColor: 'rgba(255,153,0,0.80)',
+            borderColor: '#FF9900',
+            borderRadius: 6,
+            borderWidth: 1.5,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            backgroundColor: 'rgba(35,47,62,0.95)',
+            titleFont: { size: 13, family: 'DM Sans' },
+            bodyFont:  { size: 12, family: 'Roboto Mono' },
+            padding: 12,
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            title: { display: true, text: 'Security Score (0 = none, 10 = complete)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' },
+            suggestedMin: 0, suggestedMax: 11
+          }
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>
