@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <style>
+  @font-face {
+    font-family: 'MySignature';
+    src: url('signature.ttf'); 
+    font-display: swap;
+  }
+</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AWS SageMaker AI: From 10-Year-Old to Pro</title>
@@ -133,11 +140,33 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 py-8 border-t border-gray-200 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 font-medium">
-            <p>Designed for complete understanding. Remember: Machine Learning is just finding patterns in ingredients to bake the perfect cake.</p>
-        </div>
-    </footer>
+  <footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span>Built with ❤️ by</span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+          Anwaar
+        </span>
+        <span>· No jargon, just clarity.</span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-5">
+      <a href="#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+
+  </div>
+</footer>
 
     <!-- JavaScript Application Logic -->
     <script>
