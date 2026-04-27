@@ -1,146 +1,1141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
+  <style>
   @font-face {
     font-family: 'MySignature';
     src: url('signature.ttf'); 
     font-display: swap;
   }
 </style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS SageMaker AI: From 10-Year-Old to Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Chosen Palette: Warm Kitchen Tech (Beige/Cream background, AWS Orange/Blue accents, dark slate text) -->
-    <!-- Application Structure Plan: 
-         The SPA uses a "Master Kitchen" dashboard layout. Because SageMaker is a massive, complex pipeline, mirroring a standard document would be overwhelming. 
-         Instead, I've designed an interactive "Pipeline Visualizer". Users click through the stages of Machine Learning (Prep, Build, Train, Deploy, Monitor). 
-         Each stage updates a dynamic content area below. 
-         Within each content area, information is split into two visual tiers: "The 10-Year-Old Analogy" (conceptual understanding using a restaurant kitchen metaphor) and "The Pro Console" (deep-dive technical configurations, instance types, and parameters required for real-world usage). 
-         This structure bridges basic comprehension with expert application seamlessly.
-    -->
-    <!-- Visualization & Content Choices: 
-         1. Interactive Pipeline Menu: HTML/CSS flexbox (NO SVG). Goal: Organize the ML lifecycle. Interaction: Click to load stage details. Justification: Spatial memory aids learning complex workflows.
-         2. Hyperparameter Tuning Chart: Chart.js scatter plot. Goal: Explain Autopilot/Tuning visually. Interaction: Hover for details. Justification: Shows how SageMaker tests different "recipes" (configurations) to find the highest accuracy.
-         3. Configuration Data Grids: Tailwind Grid. Goal: Display pro-level parameters. Interaction: Scroll/Read. Justification: Easy to scan technical options.
-         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is AWS SageMaker AI? — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
-    <style>
-        body {
-            font-family: 'Nunito', sans-serif;
-            background-color: #FDFBF7; /* Warm off-white */
-            color: #1E293B; /* Slate 800 */
-            overflow-x: hidden;
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
         }
-        .code-font {
-            font-family: 'Roboto Mono', monospace;
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      }
+    }
+  </script>
 
-        /* Chart Container Strict Styling */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px; /* Prevents stretching on large screens */
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px; /* Controlled height */
-            max-height: 400px;
-            background: white;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border: 1px solid #E2E8F0;
-        }
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 300px; /* Smaller height on mobile */
-            }
-        }
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
 
-        /* Pipeline Step Styling */
-        .pipeline-step {
-            transition: all 0.3s ease;
-            border-bottom: 4px solid transparent;
-        }
-        .pipeline-step.active {
-            border-bottom: 4px solid #F97316; /* AWS Orange */
-            background-color: #FFF7ED;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .analogy-card {
-            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-            border-left: 6px solid #F59E0B;
-        }
-        .pro-card {
-            background: #F8FAFC;
-            border-left: 6px solid #3B82F6; /* Tech Blue */
-            border: 1px solid #E2E8F0;
-        }
+    /* Grain texture */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
 
-        /* CSS Shapes for icons */
-        .shape-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .bg-aws-orange { background-color: #FF9900; color: white;}
-        .bg-aws-blue { background-color: #232F3E; color: white;}
-    </style>
+    /* Sticky nav */
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    /* Tab buttons */
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      border-bottom: 3px solid #FF9900;
+      color: #232F3E;
+      font-weight: 700;
+    }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    /* Cards */
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    .pro-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    /* Badge */
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Table */
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    /* Inline code */
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07);
+      color: #232F3E;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82em;
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up  { animation: fadeUp 0.5s ease both; }
+    .delay-1  { animation-delay: 0.08s; }
+    .delay-2  { animation-delay: 0.16s; }
+    .delay-3  { animation-delay: 0.24s; }
+
+    /* Accent stripe */
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    /* Chart */
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08);
+      border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    /* Mobile menu */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    /* Reading progress */
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    /* TOC */
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900;
+      border-left-color: #FF9900;
+      padding-left: 8px;
+    }
+
+    /* Pipeline step connector */
+    .step-connector::after {
+      content: '→';
+      color: #FF9900;
+      font-weight: bold;
+      margin: 0 4px;
+    }
+    .step-connector:last-child::after { display: none; }
+  </style>
 </head>
-<body class="antialiased">
+<body class="min-h-screen relative antialiased">
 
-    <!-- Header -->
-    <header class="bg-[#232F3E] text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="shape-circle bg-aws-orange font-bold">🧠</div>
-                <h1 class="text-2xl font-extrabold tracking-tight">AWS SageMaker AI <span class="text-orange-400 font-light hidden sm:inline">| The Master Kitchen</span></h1>
-            </div>
-            <div class="text-sm font-semibold bg-gray-700 px-3 py-1 rounded-full border border-gray-600">
-                Kid ➡️ Pro Guide
-            </div>
+<!-- Reading progress -->
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">🤖 AI / ML</span>
+      <span>›</span>
+      <span class="text-slate-mid">AWS SageMaker AI</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">AWS SageMaker AI?</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      The fully managed Master Kitchen for Machine Learning — from labelling raw ingredients all the way to serving predictions at global scale. Explained simply, built professionally.
+    </p>
+
+    <!-- Meta row -->
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~22 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">🤖 AI/ML · AWS</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ QUICK OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🏗️</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Fully Managed</p>
+      <p class="text-slate-light text-xs mt-1">No infra to configure</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🔁</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">End-to-End ML</p>
+      <p class="text-slate-light text-xs mt-1">Data → Train → Deploy</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">💡</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">No-Code to Pro</p>
+      <p class="text-slate-light text-xs mt-1">Canvas to API-level control</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🛡️</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Built-in Governance</p>
+      <p class="text-slate-light text-xs mt-1">Bias, drift & audit tools</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ML PIPELINE BANNER ═══════════════════ -->
+<section class="py-6 px-5 bg-slate">
+  <div class="max-w-5xl mx-auto">
+    <p class="text-[10px] uppercase tracking-widest text-amber font-bold text-center mb-3">The ML Lifecycle at a Glance</p>
+    <div class="flex flex-wrap justify-center items-center gap-2 text-white text-xs font-semibold">
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">🏷️ Label</span>
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">🧹 Prepare</span>
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">🏛️ Feature Store</span>
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">🛠️ Build / AutoML</span>
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">🔥 Train</span>
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">🚀 Deploy</span>
+      <span class="step-connector px-3 py-1.5 rounded-full bg-white/10 border border-white/20">📊 Monitor</span>
+      <span class="px-3 py-1.5 rounded-full bg-amber/20 border border-amber/40 text-amber">🌍 Edge</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- TOC Sidebar -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('environment')"  class="toc-link py-0.5 cursor-pointer active" data-tab="environment">① Studio & Environments</a>
+        <a onclick="switchTab('data')"         class="toc-link py-0.5 cursor-pointer" data-tab="data">② Data: Ground Truth</a>
+        <a onclick="switchTab('wrangler')"     class="toc-link py-0.5 cursor-pointer" data-tab="wrangler">③ Data Wrangler</a>
+        <a onclick="switchTab('features')"     class="toc-link py-0.5 cursor-pointer" data-tab="features">④ Feature Store</a>
+        <a onclick="switchTab('automl')"       class="toc-link py-0.5 cursor-pointer" data-tab="automl">⑤ AutoML: Canvas & Autopilot</a>
+        <a onclick="switchTab('training')"     class="toc-link py-0.5 cursor-pointer" data-tab="training">⑥ Training at Scale</a>
+        <a onclick="switchTab('inference')"    class="toc-link py-0.5 cursor-pointer" data-tab="inference">⑦ Inference & Deployment</a>
+        <a onclick="switchTab('governance')"   class="toc-link py-0.5 cursor-pointer" data-tab="governance">⑧ Governance & MLOps</a>
+        <a onclick="switchTab('edge')"         class="toc-link py-0.5 cursor-pointer" data-tab="edge">⑨ Edge: Neo & Edge Manager</a>
+      </nav>
+      <a href="index.html" class="mt-8 flex items-center gap-2 text-xs text-slate-light hover:text-amber transition-colors font-semibold">← Back to Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- Article content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Section Tabs -->
+    <div class="overflow-x-auto -mx-1 px-1 mb-8">
+      <div class="flex gap-1 bg-white rounded-2xl border border-slate/10 p-1.5 w-max shadow-sm">
+        <button onclick="switchTab('environment')" class="tab-btn active   px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="environment">🏗️ Studio</button>
+        <button onclick="switchTab('data')"        class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="data">🏷️ Labeling</button>
+        <button onclick="switchTab('wrangler')"    class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="wrangler">🧹 Wrangler</button>
+        <button onclick="switchTab('features')"    class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="features">🏛️ Features</button>
+        <button onclick="switchTab('automl')"      class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="automl">🤖 AutoML</button>
+        <button onclick="switchTab('training')"    class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="training">🔥 Training</button>
+        <button onclick="switchTab('inference')"   class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="inference">🚀 Deploy</button>
+        <button onclick="switchTab('governance')"  class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="governance">🛡️ Governance</button>
+        <button onclick="switchTab('edge')"        class="tab-btn          px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="edge">🌍 Edge</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 1: STUDIO & ENVIRONMENTS ══ -->
+    <div id="tab-environment" class="tab-panel active">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏗️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Master Workshop</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">Think of SageMaker as a giant high-tech kitchen for professional chefs. Before a chef can serve a meal, they need a workbench, labelled ingredient bins, specialized tools, and delivery windows. SageMaker Unified Studio is that building — it provides everything from the floorboards to the specialized machinery, all under one roof.</p>
+            <p class="text-slate-mid leading-relaxed">For a child building a Lego castle, the environment is the large flat table with instructions, bricks, and labelled bins. <strong>SageMaker Studio is that table</strong> — your organised workspace before any real work begins.</p>
+          </div>
         </div>
-    </header>
+      </div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Introduction -->
-        <section class="mb-12 text-center max-w-4xl mx-auto">
-            <h2 class="text-4xl font-extrabold mb-4 text-gray-900">What is AWS SageMaker?</h2>
-            <p class="text-xl text-gray-600 mb-6 leading-relaxed">
-                Imagine you want to open the greatest restaurant in the world. You need to prep ingredients, invent recipes, cook the food, serve it fast, and make sure it always tastes good. 
-                <br><br>
-                <strong class="text-blue-600">AWS SageMaker is that giant, automated Master Kitchen, but for Artificial Intelligence (AI) and Machine Learning (ML).</strong> It gives you every single tool you need to take raw data (ingredients), train an AI model (cook the recipe), and let computers around the world use it (serve the food).
-            </p>
-        </section>
+      <!-- Classic vs New vs Unified -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-2 flex items-center gap-3"><span class="text-2xl">🔄</span> Studio Classic vs. New vs. Unified</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">The SageMaker Unified Studio is a fundamental architectural rethink. Previously, developers had to jump between AWS Glue (ETL), Amazon Athena (SQL), and SageMaker Studio (ML) — three separate consoles. Unified Studio merges EMR, Glue, Athena, and Redshift directly into one governed environment.</p>
 
-        <!-- Interactive Pipeline Navigation -->
-        <div class="mb-8">
-            <h3 class="text-lg font-bold text-gray-500 uppercase tracking-wider mb-4 text-center">The Machine Learning Lifecycle</h3>
-            <div class="flex flex-wrap md:flex-nowrap justify-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-200" id="pipeline-nav">
-                <!-- Buttons injected via JS -->
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Feature</th><th>Studio Classic</th><th>Studio (New / Unified)</th></tr></thead>
+            <tbody>
+              <tr><td>Operational Model</td><td>Monolithic UI</td><td>Application-first launchpad</td></tr>
+              <tr><td>Startup Latency</td><td class="text-red-600 font-semibold">5–10 minutes</td><td class="text-green-700 font-semibold">20–30 seconds</td></tr>
+              <tr><td>Integrated Tools</td><td>Customised JupyterLab 3</td><td>JupyterLab, RStudio, VS Code Editor, MLflow</td></tr>
+              <tr><td>Governance Scope</td><td>Individual Domain / User</td><td>Project-centric, cross-service governance</td></tr>
+              <tr><td>Resource Management</td><td>Ambiguous compute mapping</td><td>Explicit "Spaces" with idle detection</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🗂️ Spaces — Resource Allocation</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A <strong>Space</strong> defines the instance type, storage size, and visibility for a specific task. <strong>Private spaces</strong> are dedicated to individual developers for heavy computation. <strong>Shared spaces</strong> allow real-time team collaboration on the same notebooks. Idle detection automatically shuts down compute when unused — like a sensor that turns off the lights when you leave a room.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">💻 Code Editor & RStudio</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The <strong>Code Editor</strong> is based on Code-OSS (open-source VS Code) — supports thousands of extensions, familiar terminal and debugger. <strong>RStudio on SageMaker</strong> provides a fully managed R IDE with syntax highlighting, plotting tools, and workspace management for R-language practitioners.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- HyperPod -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🧠</span> SageMaker HyperPod — Resilient Clusters for LLMs</h2>
+        <div class="analogy-card rounded-2xl p-5 mb-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🏗️ <strong>Workshop analogy:</strong> Training a Large Language Model is like a multi-day kiln firing. If one brick of the kiln breaks mid-process, you don't want to restart from scratch — you want the kiln to repair itself and continue. HyperPod does exactly this for GPU clusters.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🔍</p>
+            <p class="font-bold text-slate text-sm">Fault Detection</p>
+            <p class="text-slate-light text-xs mt-1">Continuously monitors hardware for failures</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🔄</p>
+            <p class="font-bold text-slate text-sm">Auto-Recovery</p>
+            <p class="text-slate-light text-xs mt-1">Replaces failed instances automatically</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">💾</p>
+            <p class="font-bold text-slate text-sm">Checkpoint Resume</p>
+            <p class="text-slate-light text-xs mt-1">Resumes from last saved checkpoint, not day zero</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-environment -->
+
+    <!-- ══ TAB 2: DATA LABELING — GROUND TRUTH ══ -->
+    <div id="tab-data" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏷️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Giving the AI its Stickers</h2>
+            <p class="text-slate-mid leading-relaxed">If you have a thousand photos of fruits, someone needs to tell the computer which ones are apples and which ones are oranges. Ground Truth is a classroom where a teacher gives students stickers to put on items. The stickers are the <strong>labels</strong>, and the students are the <strong>workforce</strong>. Without labels, the AI has nothing to learn from.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workforce options -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">👷</span> Workforce Management</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Ground Truth offers three workforce types, letting you balance cost, speed, and data sensitivity.</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Workforce Type</th><th>Best Use Case</th><th>Security Level</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Amazon Mechanical Turk</strong></td><td>Public, large-scale, non-sensitive datasets</td><td>Standard</td></tr>
+              <tr><td><strong>Vendor Managed</strong></td><td>Specialised tasks (e.g., medical imaging)</td><td>High (Certified)</td></tr>
+              <tr><td><strong>Private Workforce</strong></td><td>Highly sensitive internal data</td><td>Maximum (In-house)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Annotation Consolidation -->
+        <div class="pro-card rounded-2xl p-5 mb-5">
+          <h4 class="font-bold text-slate mb-2">🗳️ Annotation Consolidation — Quality Control</h4>
+          <p class="text-slate-mid text-sm leading-relaxed">Three workers look at the same photo. Two say "apple", one says "pear". Ground Truth uses <strong>majority vote or weighted algorithms</strong> to decide the final label is "apple". This prevents the model from learning wrong information from disagreements between labellers.</p>
+        </div>
+      </div>
+
+      <!-- Active Learning -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔁</span> Active Learning — The Self-Improving Loop</h2>
+        <div class="analogy-card rounded-2xl p-5 mb-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🏷️ <strong>Classroom analogy:</strong> The teacher (mini-model) grades the easy tests automatically. Only the genuinely hard questions get sent back to a human. As the mini-model gets smarter, fewer and fewer items need human review — cutting costs and time dramatically.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">How the Loop Works</h4>
+            <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+              1. Send small batch to humans<br>
+              2. Train mini-model on labels<br>
+              3. Mini-model labels easy items<br>
+              4. Confused items → humans<br>
+              5. Repeat → model improves<br>
+              ✓ Saves up to 70% of costs
             </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">Quality Gate</h4>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">If the mini-model makes too many mistakes — specifically if <strong>more than 10% of the validation sample fails</strong> — the entire labelling job is automatically halted for human review. This is the built-in safety brake.</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 text-xs font-semibold">Threshold: &gt;10% error → HALT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Streaming Jobs -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">♾️</span> Streaming Labeling Jobs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📦</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Batch-Based Jobs</h4>
+            <p class="text-slate-mid text-sm">Traditional approach: give it a pile of data at once, get labels back. Best for fixed datasets you already have.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🏭</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Streaming Jobs</h4>
+            <p class="text-slate-mid text-sm">Run perpetually — like a conveyor belt that never stops. As soon as a new photo lands in S3, it is sent to a worker for labelling immediately. Perfect for live data ingestion pipelines.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-data -->
+
+    <!-- ══ TAB 3: DATA WRANGLER ══ -->
+    <div id="tab-wrangler" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🧹</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Magical Vegetable Prep Machine</h2>
+            <p class="text-slate-mid leading-relaxed">Raw data is messy — mistakes, missing numbers, duplicates. Data Wrangler is a magical machine that washes, peels, and chops your vegetables automatically. It reduces data preparation time from <strong>weeks to minutes</strong> using a visual interface — no code required.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transformation Engine -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚙️</span> 300+ Built-in Transformations</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🔤</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Encoding</h4>
+            <p class="text-slate-mid text-sm">Turns words like "Red" or "Blue" into numbers the computer can understand (one-hot encoding, label encoding).</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">❓</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Handle Missing Values</h4>
+            <p class="text-slate-mid text-sm">Fills empty spots with mean, median, or zero. E.g. hotel bookings with no "number of children" → automatically set to 0.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📏</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Scaling & Normalisation</h4>
+            <p class="text-slate-mid text-sm">Rescales numbers to a 0–1 range so large numbers don't overpower small ones during model training.</p>
+          </div>
         </div>
 
-        <!-- Dynamic Content Area -->
-        <div id="content-area" class="min-h-[600px] transition-opacity duration-300">
-            <!-- Content will be injected here by JS -->
+        <!-- Data Quality Report -->
+        <div class="pro-card rounded-2xl p-6 mb-6">
+          <h4 class="font-bold text-slate mb-3 flex items-center gap-2">🩺 Data Quality & Insights Report</h4>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Like a health check-up for your data. Automatically scans for two critical issues:</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl p-4 border border-slate/10">
+              <p class="font-bold text-slate text-sm mb-1">🔮 Target Leakage</p>
+              <p class="text-slate-mid text-xs leading-relaxed">When your training data accidentally contains the answer to the test. Like giving students the exam answers while they study — the model aces training but fails in the real world.</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-slate/10">
+              <p class="font-bold text-slate text-sm mb-1">📊 Outlier Detection</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Finds numbers so far from the rest they're likely mistakes — like a person listed as 200 years old. Outliers corrupt training if left uncorrected.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balancing -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚖️</span> Balancing Imbalanced Datasets</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">If you have 1,000 sunny day photos but only 5 rainy day photos, your model will be biased — it will never learn what rain looks like. Data Wrangler offers three remedies:</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">Method 1</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Random Undersampling</h4>
+            <p class="text-slate-mid text-xs leading-relaxed">Throw away some of the extra "sunny" photos until the counts are balanced. Simple but discards real data.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">Method 2</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Random Oversampling</h4>
+            <p class="text-slate-mid text-xs leading-relaxed">Make copies of the "rainy" photos until they match the sunny count. Fast, but the model may memorise the duplicates.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">Method 3</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">SMOTE</h4>
+            <p class="text-slate-mid text-xs leading-relaxed"><strong>Synthetic Minority Over-sampling Technique.</strong> Creates new, realistic fake "rainy" photos by interpolating between existing ones. Best quality, preserves diversity.</p>
+          </div>
         </div>
 
-    </main>
+        <!-- Export options -->
+        <div class="pro-card rounded-2xl p-5">
+          <h4 class="font-bold text-slate mb-3 flex items-center gap-2">📤 Export Options — After Visual Preparation</h4>
+          <div class="flex flex-wrap gap-3">
+            <span class="px-3 py-1.5 rounded-xl bg-slate/10 text-slate text-xs font-semibold border border-slate/15">SageMaker Processing Job</span>
+            <span class="px-3 py-1.5 rounded-xl bg-slate/10 text-slate text-xs font-semibold border border-slate/15">SageMaker Pipeline (automated)</span>
+            <span class="px-3 py-1.5 rounded-xl bg-slate/10 text-slate text-xs font-semibold border border-slate/15">Python Script</span>
+            <span class="px-3 py-1.5 rounded-xl bg-slate/10 text-slate text-xs font-semibold border border-slate/15">Feature Store Group</span>
+          </div>
+          <p class="text-slate-light text-xs mt-3">The Processing job can handle <strong>petabytes</strong> of data; the Pipeline automates the entire cleaning workflow every time new data arrives.</p>
+        </div>
+      </div>
 
-    <!-- Footer -->
-  <footer class="py-10 px-5 bg-cream-dark">
+    </div><!-- /tab-wrangler -->
+
+    <!-- ══ TAB 4: FEATURE STORE ══ -->
+    <div id="tab-features" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🧅</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Pre-Chopped Ingredient Fridge</h2>
+            <p class="text-slate-mid leading-relaxed">In a large kitchen, if ten dishes all need chopped onions, you don't chop them ten separate times. You chop a big pile once and keep them in a labelled container in the fridge. The Feature Store is that container — a centralised repository to store, share, and manage data features so every team uses the same clean, consistent signals.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Online vs Offline -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">⚡</span> Online Store vs. Offline Store</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Component</th><th>Optimised For</th><th>Latency</th><th>Storage Mechanism</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Online Store</strong></td><td>Real-time retrieval</td><td class="text-green-700 font-semibold">&lt;10 milliseconds</td><td>In-memory / Key-value</td></tr>
+              <tr><td><strong>Offline Store</strong></td><td>Training & batch analysis</td><td class="text-slate-light">Minutes to hours</td><td>Amazon S3 (Parquet / Iceberg)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">⚡ Online Store — Real-Time Decisions</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">When a bank needs to decide in milliseconds if a credit card transaction is fraudulent, it pulls the customer's last five purchases from the Online Store. Sub-10ms latency is non-negotiable here.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">📦 Offline Store — Training History</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Every version of every feature ever written is saved in S3 as Parquet or Apache Iceberg. This historical record is used to train new model versions on complete, timestamped data.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Groups + Time Travel -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🗂️</span> Feature Groups & Time Travel</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🗂️</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Feature Groups</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Logical groupings of related features. A <code>CustomerGroup</code> might include age, zip code, and membership status. Groups make features shareable across teams and models.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">⏳</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Event Time & Time Travel</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Every record update is stamped with an <strong>Event Time</strong>. This allows "Time Travel" queries — look at exactly what the data looked like at any specific past moment to explain why a model made a decision on that date.</p>
+          </div>
+        </div>
+
+        <!-- Training-Serving Skew callout -->
+        <div class="rounded-2xl bg-slate p-6">
+          <p class="text-xs uppercase tracking-widest text-amber font-bold mb-2">Critical Concept</p>
+          <h4 class="font-display font-semibold text-white text-lg mb-2">Preventing Training-Serving Skew</h4>
+          <p class="text-slate-light text-sm leading-relaxed">Without a Feature Store, the data science team often prepares training data differently from the engineering team that prepares live inference data. The result: the model performs brilliantly in training but fails in production. Because the Feature Store keeps both the Online and Offline stores in sync from the <em>same source</em>, this skew is eliminated by design.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-features -->
+
+    <!-- ══ TAB 5: AUTOML — CANVAS & AUTOPILOT ══ -->
+    <div id="tab-automl" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">✈️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Auto-Pilot for Building Models</h2>
+            <p class="text-slate-mid leading-relaxed">Not everyone is a data scientist. SageMaker provides two auto-pilot tools that do the heavy lifting of steering the plane while you choose the destination. The difference: <strong>Canvas</strong> is for business analysts who want zero code, <strong>Autopilot</strong> is for developers who want full transparency with automation.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🎨</span> SageMaker Canvas — No-Code Model Building</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Drag and drop a spreadsheet into Canvas and build a model to predict sales or customer churn — without writing a single line of code. Designed for business analysts and domain experts.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">⚡</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Quick Build</h4>
+            <p class="text-slate-mid text-sm">Takes a few minutes. Returns a "good enough" model for fast iteration and initial exploration. Trade accuracy for speed.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🔬</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Standard Build</h4>
+            <p class="text-slate-mid text-sm">Takes hours. Explores every possible algorithm to find the most accurate result. Use this before presenting to stakeholders.</p>
+          </div>
+        </div>
+
+        <!-- Advanced modes -->
+        <div class="pro-card rounded-2xl p-6">
+          <h4 class="font-bold text-slate mb-4 flex items-center gap-2">⚙️ Advanced Build Modes</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl p-4 border border-slate/10">
+              <p class="font-bold text-slate text-sm mb-1">🎯 Ensemble Mode (AutoGluon)</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Trains several algorithms in parallel — XGBoost (good at row patterns), Neural Networks (mimic the human brain), and more — then <strong>blends their results</strong> for the best combined answer.</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-slate/10">
+              <p class="font-bold text-slate text-sm mb-1">🔧 HPO Mode</p>
+              <p class="text-slate-mid text-xs leading-relaxed"><strong>Hyperparameter Optimisation.</strong> Picks one algorithm and tries hundreds of different settings to find the "sweet spot" for accuracy. Like tuning an oven temperature to 1°C precision.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autopilot -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🤖</span> SageMaker Autopilot — The Developer's AutoML</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Autopilot is for developers who want automation but need to see under the hood. It investigates hundreds of model candidates, evaluates different feature engineering steps, and generates a ranked leaderboard.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🔭</p>
+            <p class="font-bold text-slate text-sm">Auto-investigation</p>
+            <p class="text-slate-light text-xs mt-1">Hundreds of model candidates tested automatically</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🏆</p>
+            <p class="font-bold text-slate text-sm">Leaderboard</p>
+            <p class="text-slate-light text-xs mt-1">Models ranked by accuracy, F1-score, and more</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">📓</p>
+            <p class="font-bold text-slate text-sm">Transparent Notebooks</p>
+            <p class="text-slate-light text-xs mt-1">Every model's logic is exported as readable code</p>
+          </div>
+        </div>
+
+        <div class="analogy-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed">✈️ <strong>Key differentiator:</strong> Autopilot is fully <em>transparent</em>. For every model it creates, it writes a SageMaker Studio Notebook explaining exactly how it cleaned data and which algorithms it chose. A developer can open this, read the code, and make manual improvements. No black boxes — just a head start.</p>
+        </div>
+      </div>
+
+      <!-- HPO Chart -->
+      <div class="bg-white rounded-2xl border border-slate/10 shadow-sm p-6 md:p-8">
+        <h3 class="font-display font-semibold text-xl text-slate mb-2 text-center">Visualisation: Hyperparameter Tuning in Action</h3>
+        <p class="text-slate-light text-sm text-center mb-6">Each dot is one training job. SageMaker tries different "recipes" to find the highest accuracy in the shortest time. The ⭐ marks the winning model.</p>
+        <div class="chart-container">
+          <canvas id="tuningChart"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /tab-automl -->
+
+    <!-- ══ TAB 6: TRAINING ══ -->
+    <div id="tab-training" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔥</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The World's Most Precise Oven</h2>
+            <p class="text-slate-mid leading-relaxed">Training is where the "learning" happens — the most compute-intensive step. In the bakery, this is the oven baking the dough into bread. Too cold and the bread won't rise; too hot and it burns. SageMaker provisions a cluster, loads your data from S3, runs your training script, saves the model artifacts back to S3, then <strong>shuts everything down automatically</strong> — so you stop paying the moment it finishes.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training Job API -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚙️</span> Training Job API Parameters</h2>
+        <div class="pro-card rounded-2xl p-6 mb-5">
+          <div class="bg-slate rounded-xl p-5 font-mono text-xs text-green-300 leading-relaxed">
+            <span class="text-amber">aws sagemaker create-training-job</span><br>
+            &nbsp;&nbsp;--training-job-name <span class="text-white">"my-xgboost-v1"</span><br>
+            &nbsp;&nbsp;--hyper-parameters <span class="text-white">eta=0.1,max_depth=6</span><br>
+            &nbsp;&nbsp;--resource-config InstanceType=<span class="text-white">ml.p4d.24xlarge</span>,InstanceCount=<span class="text-white">2</span><br>
+            &nbsp;&nbsp;--stopping-condition MaxRuntimeInSeconds=<span class="text-white">86400</span><br>
+            &nbsp;&nbsp;--input-data-config <span class="text-white">s3://my-bucket/train/</span><br>
+            &nbsp;&nbsp;--output-data-config <span class="text-white">s3://my-bucket/output/</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="pro-card rounded-2xl p-4">
+            <p class="font-bold text-slate text-sm mb-1"><code>--hyper-parameters</code></p>
+            <p class="text-slate-mid text-xs">Map of settings controlling algorithm behaviour. <code>eta</code> in XGBoost controls how fast it learns (learning rate). Get these wrong and the bread burns.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-4">
+            <p class="font-bold text-slate text-sm mb-1"><code>ResourceConfig</code></p>
+            <p class="text-slate-mid text-xs">Defines hardware: <code>InstanceType</code> (e.g. <code>ml.p4d.24xlarge</code> for serious GPU work) and <code>InstanceCount</code> for distributed training.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-4">
+            <p class="font-bold text-slate text-sm mb-1"><code>StoppingCondition</code></p>
+            <p class="text-slate-mid text-xs"><code>MaxRuntimeInSeconds</code> ensures you never accidentally leave a job running forever. Always set this.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-4">
+            <p class="font-bold text-slate text-sm mb-1"><code>CheckpointConfig</code></p>
+            <p class="text-slate-mid text-xs">Saves model progress to S3 periodically. Essential for Spot Training so jobs can resume after interruption.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced strategies table -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🚀</span> Advanced Training Strategies</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Strategy</th><th>Key Benefit</th><th>Mechanism</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Managed Spot Training</strong></td>
+                <td class="text-green-700 font-semibold">Up to 90% cost reduction</td>
+                <td>Uses spare AWS capacity + automatic checkpointing for interruption recovery</td>
+              </tr>
+              <tr>
+                <td><strong>Managed Warm Pools</strong></td>
+                <td>Instant restart (seconds)</td>
+                <td>Keeps compute "hot" for 60 minutes after job ends — like a pizza oven that stays warm between orders</td>
+              </tr>
+              <tr>
+                <td><strong>Heterogeneous Clusters</strong></td>
+                <td>Right tool for each task</td>
+                <td>Mix CPU-heavy (data prep) and GPU-heavy (learning) instances in one job</td>
+              </tr>
+              <tr>
+                <td><strong>HyperPod</strong></td>
+                <td>Hardware resilience</td>
+                <td>Auto-recovery + checkpoint resume for massive LLM training over days/weeks</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Spot training detail -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="analogy-card rounded-2xl p-5">
+            <p class="text-slate-mid text-sm leading-relaxed">🍕 <strong>Warm Pools analogy:</strong> A pizza oven takes 30 minutes to heat up. If you're making several pizzas in a row, you keep it hot between batches. Warm Pools do the same — the cluster stays ready for 60 minutes after your training job ends, so the next run starts in seconds.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">Checkpointing Flow</h4>
+            <div class="bg-slate rounded-xl p-3 font-mono text-xs text-green-300 leading-relaxed">
+              Job starts on Spot instance<br>
+              ↓ saves checkpoint every N mins<br>
+              AWS reclaims instance 😱<br>
+              ↓ SageMaker waits for new instance<br>
+              ↓ loads last checkpoint<br>
+              Training resumes ✓ (not restarted)
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-training -->
+
+    <!-- ══ TAB 7: INFERENCE & DEPLOYMENT ══ -->
+    <div id="tab-inference" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🍽️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Serving Window</h2>
+            <p class="text-slate-mid leading-relaxed">The model has learned. Now it's time to work — this is called <strong>Inference</strong>: asking the model to make a prediction based on new data. SageMaker provides four distinct serving modes, each optimised for a different traffic pattern and response speed requirement.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Four inference modes -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🚀</span> The Four Inference Modes</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-3xl">⚡</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Always-on · ms · 6MB max</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Real-Time Inference</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">A persistent <strong>Endpoint</strong> that is always on. Answers prediction requests in milliseconds. For interactive apps — e.g. showing a product recommendation the instant a user clicks a button. Pay continuously for the running instance.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-3xl">💤</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Spin-up on demand · Pay-per-use</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Serverless Inference</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">For <strong>intermittent</strong> traffic patterns — models queried once an hour don't need a running computer. SageMaker spins up compute only when a request arrives. You pay only for the seconds of execution. Cold starts are the trade-off.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-3xl">🕐</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Queue-based · 1GB max</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Asynchronous Inference</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">For <strong>large, long-running tasks</strong> — e.g. transcribing a one-hour video. The request is placed in a queue. SageMaker processes it and sends a <strong>notification</strong> (via SNS) when done. Handles payloads up to 1 GB.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-3xl">🌙</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Offline · massive scale</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Batch Transform</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">For <strong>scheduled offline</strong> prediction jobs. Run a Batch Transform overnight to score a million customer records for a monthly newsletter campaign. No endpoint needed — just data in S3, predictions back in S3.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Inference Components + Shadow Testing -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🧩</span> Deployment Intelligence</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="pro-card rounded-2xl p-6">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🗃️ Inference Components</h4>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">Run <strong>multiple models on a single endpoint</strong> to pack small models together and cut costs. Like a vending machine where each slot holds a different model. SageMaker routes each request to the right model automatically.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-6">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">👥 Shadow Testing</h4>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">A request arrives. It goes to the <strong>Production</strong> model to give the user an answer. Simultaneously a copy is sent to the <strong>Shadow</strong> model in secret. The shadow's answer is recorded and compared — but never shown to the user. Test new models with zero risk to real traffic.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-inference -->
+
+    <!-- ══ TAB 8: GOVERNANCE & MLOPS ══ -->
+    <div id="tab-governance" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🛡️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Rules of the Road</h2>
+            <p class="text-slate-mid leading-relaxed">A master workshop must be safe, follow laws, and keep good records. As ML becomes more powerful, it must also be more responsible. SageMaker includes a full suite of governance tools: bias detection (Clarify), live model health monitoring (Model Monitor), and automated orchestration (Pipelines).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clarify -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚖️</span> SageMaker Clarify — Bias Detection & Explainability</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Bias is an imbalance that makes a model unfair. A model trained mostly on middle-aged data will be less accurate for children or seniors. Clarify measures and reports bias using specific metrics:</p>
+
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Bias Metric</th><th>What It Measures</th></tr></thead>
+            <tbody>
+              <tr><td><code>Class Imbalance (CI)</code></td><td>Checks if one demographic group has more representation in the training data than another</td></tr>
+              <tr><td><code>DPPL</code></td><td>Difference in Positive Proportions — checks if one group receives a "Yes" outcome more often than another</td></tr>
+              <tr><td><code>KL Divergence</code></td><td>Kullback-Leibler — measures how different the label distributions are between two groups</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SHAP explainability -->
+        <div class="pro-card rounded-2xl p-6">
+          <h4 class="font-bold text-slate mb-3 flex items-center gap-2">🔍 Explainability — SHAP Values</h4>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Clarify uses <strong>SHAP (SHapley Additive exPlanations)</strong> — a method from cooperative game theory — to show exactly which features drove a prediction. For a loan approval model:</p>
+          <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+            Loan Decision: APPROVED ✓<br><br>
+            Feature Contribution:<br>
+            ████████████████████ Credit History: 70%<br>
+            ████████████ Income Level: 20%<br>
+            ██ Zip Code: 2%<br>
+            ████ Other factors: 8%
+          </div>
+          <p class="text-slate-light text-xs mt-3">This output makes the model's logic auditable, trustworthy, and regulatorily defensible.</p>
+        </div>
+      </div>
+
+      <!-- Model Monitor -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📡</span> SageMaker Model Monitor — Drift Detection</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Once a model is live, the world changes. If a model predicts what toys children want and a new blockbuster movie launches, demand patterns shift entirely — the model is now out of date. Model Monitor watches for four types of drift:</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📊</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Data Quality Drift</h4>
+            <p class="text-slate-mid text-sm">Incoming live data starts looking statistically different from the training data — different distributions, new null values, unexpected categories.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📉</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Model Quality Drift</h4>
+            <p class="text-slate-mid text-sm">The model's accuracy is dropping — it's making more mistakes than it used to. Requires ground truth labels for comparison.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">⚖️</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Bias Drift</h4>
+            <p class="text-slate-mid text-sm">The model is becoming more unfair over time as it processes new types of real-world data that shift its effective training distribution.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🔀</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Feature Attribution Drift</h4>
+            <p class="text-slate-mid text-sm">The model is starting to value different features than it did at deployment — what used to be important is no longer, or vice versa.</p>
+          </div>
+        </div>
+
+        <div class="analogy-card rounded-2xl p-4">
+          <p class="text-slate-mid text-sm">🚨 When any drift threshold is exceeded, Model Monitor sends an alert via <strong>Amazon CloudWatch</strong> — like a smoke alarm that tells you it's time to retrain your model before users notice degradation.</p>
+        </div>
+      </div>
+
+      <!-- Pipelines -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🏭</span> SageMaker Pipelines — The MLOps Conveyor Belt</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">A Pipeline is a DAG (Directed Acyclic Graph) — a one-way path where each step depends on the one before it. Every ML stage is connected into a single automated workflow.</p>
+
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Step Type</th><th>Description</th><th>Key Property</th></tr></thead>
+            <tbody>
+              <tr><td><code>ProcessingStep</code></td><td>Runs a data cleaning task</td><td><code>AppSpecification</code> — the script to run</td></tr>
+              <tr><td><code>TrainingStep</code></td><td>Trains a model from data</td><td><code>HyperParameters</code> — the settings</td></tr>
+              <tr><td><code>TuningStep</code></td><td>Tries many settings to find the best</td><td><code>ObjectiveMetric</code> — the goal</td></tr>
+              <tr><td><code>ModelStep</code></td><td>Registers a successful model</td><td><code>ModelPackageGroupName</code> — the shelf</td></tr>
+              <tr><td><code>ConditionStep</code></td><td>Makes a branching decision</td><td><code>ConditionEquals</code> — e.g. if accuracy &gt; 90%, deploy</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pro-card rounded-2xl p-5">
+          <h4 class="font-bold text-slate mb-2 text-sm">💰 Pipeline Caching</h4>
+          <p class="text-slate-mid text-sm leading-relaxed">If you re-run a pipeline but the data cleaning step's inputs haven't changed, SageMaker skips that step and uses the cached result from last time. No re-processing. No extra compute cost. Only the changed steps re-run.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-governance -->
+
+    <!-- ══ TAB 9: EDGE ══ -->
+    <div id="tab-edge" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🌍</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Intelligence at the Edge</h2>
+            <p class="text-slate-mid leading-relaxed">Sometimes you don't want the model living in the cloud. You want it on a device — a doorbell camera that recognises your face, or a warehouse robot that avoids obstacles. But a model built for a powerful cloud server is too large and too slow for a small chip. SageMaker Neo shrinks it; Edge Manager manages it.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Neo -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚡</span> SageMaker Neo — The Model Shrinker</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Neo is a <strong>compiler</strong> that translates a cloud-trained model into optimised code for specific target hardware. It understands the instruction sets of each chip family and rewrites the model to run as efficiently as possible on that chip — not a generic version, but a chip-specific one.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-3 text-sm">Supported Target Hardware</h4>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">Intel x86</span>
+              <span class="px-3 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">ARM Cortex</span>
+              <span class="px-3 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">NVIDIA Jetson</span>
+              <span class="px-3 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">AWS Inferentia</span>
+              <span class="px-3 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">Qualcomm</span>
+              <span class="px-3 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">Raspberry Pi</span>
+            </div>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="font-display font-bold text-4xl text-amber mb-1">2×</p>
+            <p class="text-slate text-sm font-semibold">Faster inference speed</p>
+            <div class="w-full h-px bg-slate/10 my-3"></div>
+            <p class="font-display font-bold text-4xl text-amber mb-1">½</p>
+            <p class="text-slate text-sm font-semibold">Memory usage</p>
+            <p class="text-slate-light text-xs mt-1">Typical gains after Neo compilation</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edge Manager -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🛠️</span> SageMaker Edge Manager — The Fleet Commander</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Once compiled models are deployed to thousands of edge devices, Edge Manager keeps them running correctly — and learning continuously.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🤖</p>
+            <p class="font-bold text-slate text-sm">Device Agent</p>
+            <p class="text-slate-light text-xs mt-1">Runs on-device, manages model lifecycle and health checks</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">📡</p>
+            <p class="font-bold text-slate text-sm">Data Collection</p>
+            <p class="text-slate-light text-xs mt-1">Periodically samples real-world data and sends it back to the cloud</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🔄</p>
+            <p class="font-bold text-slate text-sm">Continuous Improvement</p>
+            <p class="text-slate-light text-xs mt-1">Cloud retrains on real-world samples; pushes updated model to devices</p>
+          </div>
+        </div>
+
+        <div class="analogy-card rounded-2xl p-5 mb-8">
+          <p class="text-slate-mid text-sm leading-relaxed">🌍 <strong>Fleet analogy:</strong> Imagine 50,000 doorbell cameras deployed worldwide. Edge Manager is the fleet commander — it knows which cameras have stale models, pushes updates overnight, collects samples of unusual faces to help the model learn, and alerts you if any device stops responding. The model gets smarter every day it's in the real world.</p>
+        </div>
+      </div>
+
+      <!-- Conclusion dark panel -->
+      <div class="rounded-2xl bg-slate p-8 text-white">
+        <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Summary</p>
+        <h2 class="font-display font-bold text-2xl md:text-3xl mb-4">Achieving Operational Flawlessness</h2>
+        <p class="text-slate-light leading-relaxed mb-4">Mastering SageMaker means treating it not as a collection of disconnected tools, but as a <strong class="text-white">unified manufacturing system</strong>. Each pillar is essential:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 text-sm">
+          <div class="flex items-start gap-2">
+            <span class="text-amber mt-0.5 flex-shrink-0">→</span>
+            <span class="text-slate-light"><strong class="text-white">Environment Mastery:</strong> Unified Studio + Spaces + idle detection</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-amber mt-0.5 flex-shrink-0">→</span>
+            <span class="text-slate-light"><strong class="text-white">Data Integrity:</strong> Ground Truth + Wrangler's target leakage checks</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-amber mt-0.5 flex-shrink-0">→</span>
+            <span class="text-slate-light"><strong class="text-white">Storage Efficiency:</strong> Feature Store eliminates training-serving skew</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-amber mt-0.5 flex-shrink-0">→</span>
+            <span class="text-slate-light"><strong class="text-white">Training Precision:</strong> Spot Training + Warm Pools + HyperPod</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-amber mt-0.5 flex-shrink-0">→</span>
+            <span class="text-slate-light"><strong class="text-white">Deployment Versatility:</strong> Match inference mode to traffic pattern + Shadow Testing</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-amber mt-0.5 flex-shrink-0">→</span>
+            <span class="text-slate-light"><strong class="text-white">Ethical Governance:</strong> Clarify + Model Monitor are not optional extras</span>
+          </div>
+        </div>
+        <p class="text-slate-light text-sm leading-relaxed mb-6">The evolution towards the SageMaker Lakehouse and Unified Studio marks the beginning of a new era where data engineering and machine learning are no longer separate paths, but a single fluid journey towards enterprise intelligence.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="AWS-S3.html" class="px-4 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors">← Read: AWS S3</a>
+          <a href="index.html" class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← All Topics</a>
+        </div>
+      </div>
+
+    </div><!-- /tab-edge -->
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark">
   <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
 
     <div class="flex items-center gap-2.5">
@@ -168,436 +1163,103 @@
   </div>
 </footer>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // --- Data Storage: The Content for the SPA ---
-        const sagemakerData = {
-            prep: {
-                id: 'prep',
-                icon: '🥬',
-                title: '1. Prepare (Data Prep)',
-                subtitle: 'Getting the Ingredients Ready',
-                analogy: `
-                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
-                    <p class="text-amber-900 mb-2">Before you cook, you need to buy groceries, wash the vegetables, chop them up, and throw away the rotten ones. If you try to bake a cake with rotten eggs, the cake will be terrible! Sometimes, you even need helpers to put labels on jars so you know what's inside (e.g., "This is sugar, this is salt").</p>
-                    <p class="text-amber-900 font-semibold">In AI, this is called Data Preparation. Your AI model is only as smart as the data you feed it.</p>
-                `,
-                proTools: [
-                    {
-                        name: 'SageMaker Ground Truth',
-                        type: 'Data Labeling Service',
-                        desc: 'Used when you have raw data (like images of cars) but need them labeled (e.g., bounding boxes saying "Toyota", "Ford") so the AI can learn what they look like.',
-                        options: [
-                            { name: 'Workforce Options', detail: 'Amazon Mechanical Turk (public crowd), Private (your employees), or Vendor (3rd party experts).' },
-                            { name: 'Task Types', detail: 'Image classification, Object detection (bounding boxes), Text classification, Semantic segmentation.' },
-                            { name: 'Automated Data Labeling', detail: 'Uses Active Learning. It trains a mini-model to label easy data automatically, sending only the hard ones to humans. Saves 70% of costs.' }
-                        ]
-                    },
-                    {
-                        name: 'SageMaker Data Wrangler',
-                        type: 'Visual Data Preparation',
-                        desc: 'The ultimate prep station. Connect to data sources, clean it, and transform it without writing thousands of lines of code.',
-                        options: [
-                            { name: 'Data Sources', detail: 'Import directly from Amazon S3, Amazon Athena, Redshift, or Snowflake.' },
-                            { name: 'Built-in Transforms', detail: 'Over 300+ clicks-not-code transformations (e.g., drop missing values, one-hot encode text, scale numbers 0 to 1).' },
-                            { name: 'Data Quality Insights', detail: 'Automatically detects "Target Leakage" (when the answer is accidentally hidden in the training data).' },
-                            { name: 'Export', detail: 'Exports your steps as a Python script, SageMaker Pipeline, or Feature Store group.' }
-                        ]
-                    },
-                    {
-                        name: 'SageMaker Feature Store',
-                        type: 'Centralized Ingredient Fridge',
-                        desc: 'A purpose-built repository to store, update, and retrieve machine learning features (cleaned data bits) so different teams don\'t have to clean the same data twice.',
-                        options: [
-                            { name: 'Online Store', detail: 'Ultra-low latency (<10ms) for real-time predictions. Stored in memory.' },
-                            { name: 'Offline Store', detail: 'Appended to Amazon S3. Used for batch training on massive historical datasets.' },
-                            { name: 'Time Travel', detail: 'Allows you to extract data exactly as it looked at a specific point in the past to ensure fair training.' }
-                        ]
-                    }
-                ]
-            },
-            build: {
-                id: 'build',
-                icon: '🍳',
-                title: '2. Build (The Lab)',
-                subtitle: 'Writing the Recipe',
-                analogy: `
-                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
-                    <p class="text-amber-900 mb-2">Now you are in your private test kitchen. You have your cutting board, your recipe book, and your utensils. You start writing down exactly how to mix the ingredients. Sometimes you use a recipe your grandma gave you (a built-in algorithm), and sometimes you invent a completely new one from scratch.</p>
-                    <p class="text-amber-900 font-semibold">In AI, this is where Data Scientists write code to define the architecture of the neural network or choose the mathematical formula.</p>
-                `,
-                proTools: [
-                    {
-                        name: 'SageMaker Studio / Notebook Instances',
-                        type: 'Integrated Development Environment (IDE)',
-                        desc: 'Your cloud-based workstation. It\'s an interface (usually Jupyter Notebooks) where you write Python code (Pandas, TensorFlow, PyTorch) to build your models.',
-                        options: [
-                            { name: 'Instance Types (Compute)', detail: 'You MUST choose the underlying computer. Examples: <code>ml.t3.medium</code> (cheap, for writing code), <code>ml.p3.2xlarge</code> (has GPUs for heavy lifting).' },
-                            { name: 'EBS Volume Size', detail: 'Attached hard drive space (e.g., 5GB to 16384GB). You need enough space to download your datasets locally into the notebook.' },
-                            { name: 'Lifecycle Configurations', detail: 'Scripts that run automatically when the notebook starts (e.g., to auto-install specific Python libraries like <code>pip install xgboost</code> so you don\'t have to do it every time).' }
-                        ]
-                    },
-                    {
-                        name: 'SageMaker Built-in Algorithms',
-                        type: 'Pre-packaged Models',
-                        desc: 'AWS provides pre-written, highly optimized algorithms. You don\'t write the math; you just point it at your data.',
-                        options: [
-                            { name: 'XGBoost', detail: 'The king of tabular (spreadsheet) data. Great for predicting prices, churn, or risk.' },
-                            { name: 'Image Classification (ResNet)', detail: 'Used for categorizing pictures.' },
-                            { name: 'BlazingText', detail: 'Highly optimized text classification and Word2Vec creation.' },
-                            { name: 'Input/Output Formats', detail: 'Most built-in algorithms require data in specific formats, usually <code>CSV</code> or <code>RecordIO-Protobuf</code> (a highly compressed format for faster AWS processing).' }
-                        ]
-                    }
-                ]
-            },
-            train: {
-                id: '🔥',
-                icon: '🔥',
-                title: '3. Train & Tune',
-                subtitle: 'Baking and Tasting',
-                analogy: `
-                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
-                    <p class="text-amber-900 mb-2">You put the cake in the oven (Training). But wait! What temperature should the oven be? How long should it bake? These are called "Hyperparameters." <br><br>Instead of guessing, you hire a robot chef. You tell the robot: <i>"Bake 50 cakes. Try temperatures between 300° and 400°, and times between 20 and 40 minutes. Bring me the best tasting one."</i></p>
-                    <p class="text-amber-900 font-semibold">In AI, Training is the computer finding the patterns. Tuning is finding the best settings for the math formula.</p>
-                `,
-                proTools: [
-                    {
-                        name: 'SageMaker Training Jobs',
-                        type: 'Ephemeral Compute Clusters',
-                        desc: 'You DO NOT train on your notebook. Notebooks are weak. You tell SageMaker to spin up massive servers, run the training, save the result, and shut down immediately so you don\'t pay extra.',
-                        options: [
-                            { name: 'Estimator Object', detail: 'The Python code block where you define the job. You define the <code>image_uri</code> (the Docker container holding the algorithm) and the <code>role</code> (IAM permissions).' },
-                            { name: 'InputDataConfig', detail: 'You must provide the exact S3 URI (e.g., <code>s3://my-bucket/train-data/</code>) where the raw data lives. SageMaker downloads it to the training instance.' },
-                            { name: 'OutputDataConfig', detail: 'The S3 bucket where the final, trained <code>model.tar.gz</code> file will be saved.' },
-                            { name: 'Managed Spot Training', detail: 'A crucial cost-saving setting. Uses spare AWS servers for up to 90% discount. If AWS needs the server back, it pauses your job. Requires setting up "Checkpointing" (saving progress midway).' }
-                        ]
-                    },
-                    {
-                        name: 'Automatic Model Tuning (Hyperparameter Tuning)',
-                        type: 'Optimization Engine',
-                        desc: 'Launches multiple training jobs concurrently with slightly different parameters to find the most accurate model.',
-                        options: [
-                            { name: 'Objective Metric', detail: 'What are you trying to maximize/minimize? (e.g., Maximize <code>Validation:Accuracy</code> or Minimize <code>Root Mean Square Error</code>).' },
-                            { name: 'Parameter Ranges', detail: 'You set the bounds. E.g., Learning Rate (Continuous): 0.001 to 0.1. Batch Size (Integer): 32 to 256.' },
-                            { name: 'Search Strategy', detail: '<code>Bayesian</code> (smart, learns from previous jobs to guess better next time) or <code>Random</code> (picks blindly, faster but less efficient).' }
-                        ]
-                    },
-                    {
-                        name: 'SageMaker Autopilot',
-                        type: 'AutoML (No-Code AI)',
-                        desc: 'You just provide the spreadsheet (CSV) and tell it which column to predict. Autopilot automatically cleans data, tries multiple algorithms, tunes them, and gives you a leaderboard of the best models.',
-                        options: [
-                            { name: 'Visibility', detail: 'Unlike black-box AutoML, Autopilot generates a Jupyter Notebook showing exactly how it built the model, so you can edit it later.' }
-                        ]
-                    }
-                ],
-                includeChart: true // Flag to render the chart
-            },
-            deploy: {
-                id: 'deploy',
-                icon: '🚚',
-                title: '4. Deploy (Hosting)',
-                subtitle: 'Opening the Drive-Thru',
-                analogy: `
-                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
-                    <p class="text-amber-900 mb-2">The recipe is perfect! Now, you open up the restaurant window. Customers drive up, hand you their order (data), and you instantly hand them a baked pizza (the prediction). <br><br>If 1000 cars show up at once, your kitchen needs to magically clone itself so nobody waits (Auto-scaling).</p>
-                    <p class="text-amber-900 font-semibold">In AI, Deployment means putting your <code>model.tar.gz</code> file onto a live server so apps (like your phone) can ask it questions via an API.</p>
-                `,
-                proTools: [
-                    {
-                        name: 'Real-Time Endpoints',
-                        type: 'Always-On API Servers',
-                        desc: 'A dedicated server that is always running, waiting for data payloads to arrive via HTTPS. Responds in milliseconds.',
-                        options: [
-                            { name: 'InitialInstanceCount', detail: 'How many servers to start with. (Always use >= 2 across different Availability Zones for production reliability).' },
-                            { name: 'InstanceType', detail: 'e.g., <code>ml.m5.large</code> for general inference, or <code>ml.g4dn.xlarge</code> if your model requires a GPU to infer quickly.' },
-                            { name: 'Auto-Scaling Policies', detail: 'Rules you set. "If the endpoint receives more than 1000 requests per minute, automatically add another server. If it drops to 10, remove the server."' }
-                        ]
-                    },
-                    {
-                        name: 'Production Variants (A/B Testing)',
-                        type: 'Traffic Splitting',
-                        desc: 'Deploying two different models behind a single endpoint URL to test which is better in the real world.',
-                        options: [
-                            { name: 'InitialVariantWeight', detail: 'You set the rules. e.g., Model A (old reliable) gets Weight: 90 (90% of traffic). Model B (new experiment) gets Weight: 10. You monitor which one makes more money.' }
-                        ]
-                    },
-                    {
-                        name: 'Other Deployment Types',
-                        type: 'Cost/Scale Alternatives',
-                        desc: 'Real-time isn\'t always needed.',
-                        options: [
-                            { name: 'Serverless Inference', detail: 'You don\'t pick servers. It only turns on when a request comes in. Great for apps used sporadically. You pay per request, not per hour.' },
-                            { name: 'Asynchronous Inference', detail: 'For large payloads (like analyzing a 1GB video). The user sends it, gets a token, and checks back later for the result. Avoids browser timeouts.' },
-                            { name: 'Batch Transform', detail: 'No API endpoint. You have an S3 bucket of 1 million images. SageMaker spins up servers, predicts all 1 million, saves results to another S3 bucket, and turns off. Used for overnight jobs.' }
-                        ]
-                    }
-                ]
-            },
-            monitor: {
-                id: 'monitor',
-                icon: '📋',
-                title: '5. Monitor & Manage',
-                subtitle: 'The Health Inspector',
-                analogy: `
-                    <h4 class="text-xl font-bold text-amber-800 mb-2">The Kitchen Analogy</h4>
-                    <p class="text-amber-900 mb-2">Your restaurant is running, but what if the price of tomatoes changes, or people suddenly start hating cheese? Your old recipe won't work anymore! A health inspector must constantly taste the food and check customer reviews. If the quality drops, an alarm rings, and you must bake a new recipe.</p>
-                    <p class="text-amber-900 font-semibold">In AI, the world changes. A model trained to predict house prices in 2019 is useless in 2024. Monitoring watches for these changes (Data Drift).</p>
-                `,
-                proTools: [
-                    {
-                        name: 'SageMaker Model Monitor',
-                        type: 'Continuous Quality Control',
-                        desc: 'Automatically monitors endpoints in production to detect deviations in data quality or model accuracy.',
-                        options: [
-                            { name: 'DataCaptureConfig', detail: 'A setting you enable on the Endpoint. It saves a copy of every request sent by users and every prediction the model makes into an S3 bucket.' },
-                            { name: 'Data Quality Drift', detail: 'Triggers CloudWatch alarms if the incoming data changes. (e.g., Training data age was 20-50. Suddenly, real-world users inputting age 80-100). The model hasn\'t seen this, so predictions will be bad.' },
-                            { name: 'Model Quality Drift', detail: 'If you have ground truth (actual results) later, it compares prediction vs reality to check if accuracy is dropping.' }
-                        ]
-                    },
-                    {
-                        name: 'SageMaker Clarify',
-                        type: 'Bias & Explainability Tool',
-                        desc: 'Ensures your model isn\'t racist, sexist, or making unfair decisions, and explains WHY it made a decision.',
-                        options: [
-                            { name: 'Pre-training Bias', detail: 'Checks raw data. (e.g., "Are there 90% male resumes and only 10% female? The model will learn to favor males.")' },
-                            { name: 'Post-training Bias', detail: 'Checks the model\'s predictions across different groups.' },
-                            { name: 'Explainability (SHAP values)', detail: 'If a bank loan is denied, Clarify tells you exactly which feature caused it (e.g., "Income was high, but Credit Score was the primary reason for denial").' }
-                        ]
-                    },
-                    {
-                        name: 'SageMaker Pipelines',
-                        type: 'MLOps Automation (CI/CD for ML)',
-                        desc: 'Instead of clicking buttons manually, you write code to define the entire flow (Prep -> Train -> Tune -> Evaluate -> Deploy).',
-                        options: [
-                            { name: 'Steps', detail: 'Defined as code objects: <code>ProcessingStep</code>, <code>TrainingStep</code>, <code>ConditionStep</code>.' },
-                            { name: 'ConditionStep Logic', detail: 'Crucial for automation. e.g., "IF Accuracy > 85%, proceed to RegisterModelStep. IF Accuracy < 85%, Stop the pipeline and email the team."' },
-                            { name: 'Model Registry', detail: 'A catalog of approved models. Before deploying to production, a senior data scientist can go into the registry, look at the metrics, and manually change the status to "Approved".' }
-                        ]
-                    }
-                ]
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* Mobile menu */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* Reading progress */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('read-progress').style.width = (scrolled * 100) + '%';
+    const nav = document.getElementById('navbar');
+    nav.style.boxShadow = doc.scrollTop > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* Tab switching */
+  function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    document.querySelectorAll('.toc-link').forEach(l => l.classList.toggle('active', l.dataset.tab === id));
+    if (id === 'automl') setTimeout(renderTuningChart, 150);
+  }
+
+  /* HPO Scatter Chart */
+  let tuningChartInstance = null;
+  function renderTuningChart() {
+    const ctx = document.getElementById('tuningChart');
+    if (!ctx) return;
+    if (tuningChartInstance) tuningChartInstance.destroy();
+
+    const jobs = [];
+    for (let i = 0; i < 45; i++) {
+      jobs.push({
+        x: Math.random() * 50 + 10,
+        y: 50 + (Math.random() * 35) + (i * 0.18),
+        learningRate: (Math.random() * 0.1).toFixed(4),
+        jobName: `Job-${100 + i}`
+      });
+    }
+    jobs.push({ x: 34, y: 98.7, learningRate: '0.0450', jobName: 'Best-Model-XGB', isBest: true });
+
+    tuningChartInstance = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Training Jobs',
+            data: jobs.filter(j => !j.isBest),
+            backgroundColor: 'rgba(59,130,246,0.45)',
+            borderColor: 'rgba(59,130,246,0.8)',
+            pointRadius: 6,
+            pointHoverRadius: 9,
+          },
+          {
+            label: '⭐ Best Model',
+            data: jobs.filter(j => j.isBest),
+            backgroundColor: 'rgba(255,153,0,0.9)',
+            borderColor: '#b45309',
+            pointRadius: 12,
+            pointHoverRadius: 14,
+            pointStyle: 'star',
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            backgroundColor: 'rgba(35,47,62,0.95)',
+            titleFont: { size: 13, family: 'DM Sans' },
+            bodyFont:  { size: 12, family: 'Roboto Mono' },
+            padding: 12,
+            callbacks: {
+              label: ctx => {
+                const p = ctx.raw;
+                return [`Accuracy: ${p.y.toFixed(1)}%`, `Time: ${p.x.toFixed(0)} mins`, `LR: ${p.learningRate}`];
+              }
             }
-        };
-
-        const stages = Object.keys(sagemakerData);
-        let chartInstance = null;
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            renderNavigation();
-            loadContent('prep'); // Load first stage by default
-        });
-
-        // --- Render Navigation ---
-        function renderNavigation() {
-            const navContainer = document.getElementById('pipeline-nav');
-            stages.forEach((key, index) => {
-                const data = sagemakerData[key];
-                const btn = document.createElement('button');
-                btn.className = `pipeline-step flex-1 py-3 px-4 rounded-xl text-center font-bold text-sm sm:text-base text-gray-600 hover:bg-gray-50 flex flex-col items-center gap-1 min-w-[120px]`;
-                btn.id = `nav-${key}`;
-                btn.onclick = () => loadContent(key);
-                btn.innerHTML = `
-                    <span class="text-2xl">${data.icon}</span>
-                    <span>${data.title.split(' ')[0]} ${data.title.split(' ')[1] || ''}</span>
-                `;
-                navContainer.appendChild(btn);
-                
-                // Add arrow separator except for last item
-                if (index < stages.length - 1) {
-                    const arrow = document.createElement('div');
-                    arrow.className = 'hidden md:flex items-center text-gray-300 font-bold';
-                    arrow.innerHTML = '▶';
-                    navContainer.appendChild(arrow);
-                }
-            });
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Training Time (Minutes)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' }
+          },
+          y: {
+            title: { display: true, text: 'Validation Accuracy (%)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' },
+            suggestedMin: 45, suggestedMax: 102
+          }
         }
-
-        // --- Load Content Area ---
-        function loadContent(stageKey) {
-            const data = sagemakerData[stageKey];
-            const contentArea = document.getElementById('content-area');
-            
-            // Update active state in nav
-            document.querySelectorAll('.pipeline-step').forEach(el => el.classList.remove('active', 'text-orange-600'));
-            const activeNav = document.getElementById(`nav-${stageKey}`);
-            if(activeNav) {
-                activeNav.classList.add('active', 'text-orange-600');
-            }
-
-            // Fade out
-            contentArea.style.opacity = 0;
-            
-            setTimeout(() => {
-                let html = `
-                    <div class="mb-8 text-center sm:text-left">
-                        <h2 class="text-3xl font-extrabold text-gray-900 flex items-center justify-center sm:justify-start gap-3">
-                            <span class="text-4xl">${data.icon}</span> ${data.title}
-                        </h2>
-                        <p class="text-lg text-gray-500 font-semibold mt-1 uppercase tracking-wide">${data.subtitle}</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        
-                        <!-- Left Column: The Concept -->
-                        <div class="lg:col-span-4 space-y-6">
-                            <div class="analogy-card p-6 rounded-2xl shadow-sm">
-                                ${data.analogy}
-                            </div>
-                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">Why it matters for Pros:</h4>
-                                <p class="text-gray-600 text-sm">Mistakes in this phase compound. If you configure these tools incorrectly, you will either pay AWS thousands of dollars unnecessarily, or deploy a model that makes terrible predictions in the real world.</p>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Pro Tools Detail -->
-                        <div class="lg:col-span-8 space-y-6">
-                            <h3 class="text-2xl font-extrabold text-gray-900 border-b-2 border-blue-500 pb-2 inline-block">The Pro Console: Tools & Configuration</h3>
-                `;
-
-                // Render Pro Tools
-                data.proTools.forEach(tool => {
-                    let optionsHtml = tool.options.map(opt => `
-                        <li class="mb-2">
-                            <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-sm code-font">${opt.name}</span>: 
-                            <span class="text-slate-600 text-sm">${opt.detail}</span>
-                        </li>
-                    `).join('');
-
-                    html += `
-                        <div class="pro-card p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
-                                <h4 class="text-xl font-bold text-blue-900">${tool.name}</h4>
-                                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">${tool.type}</span>
-                            </div>
-                            <p class="text-gray-700 mb-4 font-medium">${tool.desc}</p>
-                            <div class="bg-white bg-opacity-50 p-4 rounded-xl border border-blue-100">
-                                <h5 class="text-sm font-extrabold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                    ⚙️ Critical Configurations
-                                </h5>
-                                <ul class="list-disc pl-5 space-y-1">
-                                    ${optionsHtml}
-                                </ul>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `</div></div>`; // Close grid and right column
-
-                // Inject Chart if needed (specifically for training/tuning stage)
-                if (data.includeChart) {
-                    html += `
-                        <div class="mt-12 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
-                            <div class="text-center mb-6">
-                                <h3 class="text-2xl font-extrabold text-gray-900">Visualization: Automatic Model Tuning in Action</h3>
-                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">This chart shows what SageMaker does behind the scenes when you run a Hyperparameter Tuning Job. It tries different "recipes" (dots). The goal is to find the highest accuracy in the shortest training time.</p>
-                            </div>
-                            <!-- STRICT CHART CONTAINER -->
-                            <div class="chart-container">
-                                <canvas id="tuningChart"></canvas>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                contentArea.innerHTML = html;
-                contentArea.style.opacity = 1;
-
-                // Render chart after DOM update if needed
-                if (data.includeChart) {
-                    setTimeout(renderChart, 100);
-                }
-
-            }, 300); // match transition duration
-        }
-
-        // --- Chart.js Implementation for Visualization ---
-        function renderChart() {
-            const ctx = document.getElementById('tuningChart');
-            if (!ctx) return;
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            // Generate dummy scatter data representing training jobs
-            // X: Training Time (minutes), Y: Validation Accuracy (%)
-            const jobs = [];
-            for(let i=0; i<40; i++) {
-                jobs.push({
-                    x: Math.random() * 50 + 10, // 10 to 60 mins
-                    y: (Math.random() * 40) + 50 + (i*0.2), // getting better over time conceptually
-                    r: 6, // radius
-                    jobName: `Job-${100+i}`,
-                    learningRate: (Math.random() * 0.1).toFixed(4)
-                });
-            }
-            
-            // Add a "Best Job" outlier
-            jobs.push({ x: 35, y: 98.5, r: 10, jobName: 'Best-Model-XGB', learningRate: '0.0450', isBest: true });
-
-            chartInstance = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Standard Training Jobs',
-                        data: jobs.filter(j => !j.isBest),
-                        backgroundColor: 'rgba(59, 130, 246, 0.5)', // Blue
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: '🏆 Best Model Found',
-                        data: jobs.filter(j => j.isBest),
-                        backgroundColor: 'rgba(245, 158, 11, 0.9)', // Amber/Orange
-                        borderColor: '#b45309',
-                        pointRadius: 10,
-                        pointHoverRadius: 12,
-                        pointStyle: 'star'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // CRITICAL for chart-container logic
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                            titleFont: { size: 14, family: 'Nunito' },
-                            bodyFont: { size: 13, family: 'Roboto Mono' },
-                            padding: 12,
-                            callbacks: {
-                                label: function(context) {
-                                    const pt = context.raw;
-                                    const labels = [
-                                        `Status: Completed`,
-                                        `Accuracy: ${pt.y.toFixed(1)}%`,
-                                        `Time: ${pt.x.toFixed(0)} mins`,
-                                        `Learning Rate (Hyperparameter): ${pt.learningRate}`
-                                    ];
-                                    // Wrap logic simulation by breaking into array
-                                    return labels;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Training Time (Minutes)', font: {weight: 'bold'} },
-                            grid: { color: '#f1f5f9' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Validation Accuracy (%)', font: {weight: 'bold'} },
-                            grid: { color: '#f1f5f9' },
-                            suggestedMin: 40,
-                            suggestedMax: 100
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+      }
+    });
+  }
+</script>
 </body>
 </html>
