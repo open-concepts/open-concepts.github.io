@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <style>
+  @font-face {
+    font-family: 'MySignature';
+    src: url('signature.ttf'); 
+    font-display: swap;
+  }
+  </style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>What is AWS S3? — Open-Concepts</title>
@@ -890,12 +897,15 @@
       </div>
       <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
     </div>
-    <p class="font-body text-slate-light text-xs text-center">Built with ❤️ on GitHub Pages · No jargon, just clarity.</p>
-    <div class="flex items-center gap-5">
-      <a href="index.html#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
-      <a href="index.html#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
-      <a href="index.html#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
-    </div>
+    <div class="mt-12 pb-8 text-center">
+    <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+      <span>Built with ❤️ by</span>
+    <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+        Anwaar
+      </span>
+    <span>· No jargon, just clarity.</span>
+    </p>
+</div>
   </div>
 </footer>
 
