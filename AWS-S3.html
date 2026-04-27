@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is AWS S3? — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
+
+    /* Grain texture */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* Sticky nav */
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    /* Section tabs */
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      border-bottom: 3px solid #FF9900;
+      color: #232F3E;
+      font-weight: 700;
+    }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    /* Analogy card */
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    /* Pro card */
+    .pro-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    /* Info card */
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    /* Storage class tier badge */
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Table */
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    /* Code inline */
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07);
+      color: #232F3E;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82em;
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    .delay-1 { animation-delay: 0.08s; }
+    .delay-2 { animation-delay: 0.16s; }
+    .delay-3 { animation-delay: 0.24s; }
+
+    /* Accent stripe */
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    /* Chart container */
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08);
+      border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    /* Mobile menu */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    /* Progress bar for reading */
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    /* TOC sidebar */
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900;
+      border-left-color: #FF9900;
+      padding-left: 8px;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative antialiased">
+
+<!-- Reading progress bar -->
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO / ARTICLE HEADER ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">☁️ Cloud</span>
+      <span>›</span>
+      <span class="text-slate-mid">AWS S3</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">AWS S3?</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      Amazon's giant cloud filing cabinet — explained from a curious kid's first question all the way to how a professional architect designs with it.
+    </p>
+
+    <!-- Meta row -->
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~18 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">☁️ AWS · Cloud</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ QUICK OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🗃️</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Object Storage</p>
+      <p class="text-slate-light text-xs mt-1">Flat, key-based architecture</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">♾️</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Unlimited Scale</p>
+      <p class="text-slate-light text-xs mt-1">Petabytes to exabytes</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🔒</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Private by Default</p>
+      <p class="text-slate-light text-xs mt-1">IAM + bucket policies</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">📊</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">11 Nines Durable</p>
+      <p class="text-slate-light text-xs mt-1">99.999999999% reliability</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- LEFT: TOC Sidebar (desktop) -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('foundations')" class="toc-link py-0.5 cursor-pointer" data-tab="foundations">① Foundations</a>
+        <a onclick="switchTab('storage')"     class="toc-link py-0.5 cursor-pointer" data-tab="storage">② Storage Classes</a>
+        <a onclick="switchTab('workflow')"    class="toc-link py-0.5 cursor-pointer" data-tab="workflow">③ Lifecycle & Versioning</a>
+        <a onclick="switchTab('security')"    class="toc-link py-0.5 cursor-pointer" data-tab="security">④ Security</a>
+        <a onclick="switchTab('performance')" class="toc-link py-0.5 cursor-pointer" data-tab="performance">⑤ Performance</a>
+        <a onclick="switchTab('future')"      class="toc-link py-0.5 cursor-pointer" data-tab="future">⑥ AI & Future</a>
+      </nav>
+      <!-- Back link -->
+      <a href="index.html" class="mt-8 flex items-center gap-2 text-xs text-slate-light hover:text-amber transition-colors font-semibold">
+        ← Back to Dashboard
+      </a>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Article content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Section Tabs (scrollable on mobile) -->
+    <div class="overflow-x-auto -mx-1 px-1 mb-8">
+      <div class="flex gap-1 bg-white rounded-2xl border border-slate/10 p-1.5 w-max min-w-full md:w-auto md:min-w-0 shadow-sm">
+        <button onclick="switchTab('foundations')" class="tab-btn active   px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="foundations">🗃️ Foundations</button>
+        <button onclick="switchTab('storage')"     class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="storage">📦 Storage Classes</button>
+        <button onclick="switchTab('workflow')"    class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="workflow">🔄 Lifecycle</button>
+        <button onclick="switchTab('security')"    class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="security">🔐 Security</button>
+        <button onclick="switchTab('performance')" class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="performance">⚡ Performance</button>
+        <button onclick="switchTab('future')"      class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="future">🤖 AI & Future</button>
+      </div>
+    </div>
+
+    <!-- ── TAB 1: FOUNDATIONS ── -->
+    <div id="tab-foundations" class="tab-panel active">
+
+      <!-- Analogy intro -->
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🍳</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">S3 is a Giant Cloud Pantry</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">
+              Imagine a high-end restaurant with a <strong>master pantry</strong> so big it could hold every ingredient on earth. Every jar, every bag, every bottle has a unique label. You can walk in, grab exactly what you need in milliseconds, and never worry about it running out of shelf space — ever. That's Amazon S3.
+            </p>
+            <p class="text-slate-mid leading-relaxed">
+              Unlike the filing cabinet on your computer (folders inside folders inside folders), S3 uses a <strong>flat structure</strong>. Every item goes in a bin called a <em>Bucket</em> and gets a unique label called a <em>Key</em>. No nested drawers — just one giant open floor with perfectly labelled shelves.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buckets -->
+      <div class="mb-10">
+        <h2 id="buckets" class="font-display font-bold text-2xl md:text-3xl text-slate mb-2 flex items-center gap-3">
+          <span class="text-3xl">🪣</span> Buckets — The Global Storage Bins
+        </h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Every object in S3 must live inside a <strong>Bucket</strong>. Think of it as the labelled bin in the pantry. For nearly two decades these bin names had to be <em>globally unique</em> — if a chef in New York named a bin <code>pizza-supplies</code>, no one else on earth could use that name. Modern S3 now allows duplicate names across different AWS accounts via account-level namespaces.</p>
+
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr>
+              <th>Naming Rule</th><th>Description</th><th>🍳 Kitchen Analogy</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><code>Length</code></td><td>3–63 characters</td><td>Label must be clear and concise</td></tr>
+              <tr><td><code>Characters</code></td><td>Lowercase letters, numbers, hyphens only</td><td>No fancy cursive or uppercase — hard for scanners to read</td></tr>
+              <tr><td><code>Start / End</code></td><td>Must start and end with a letter or number</td><td>No beginning or ending with a dash</td></tr>
+              <tr><td><code>Uniqueness</code></td><td>Historically globally unique across all accounts</td><td>Every bin has one serial number for the whole world</td></tr>
+              <tr><td><code>No underscores</code></td><td>Underscores and uppercase not allowed</td><td>Keeps labels easy for digital systems to parse</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Objects -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl md:text-3xl text-slate mb-2 flex items-center gap-3">
+          <span class="text-3xl">📦</span> Objects — The Digital Ingredients
+        </h2>
+        <p class="text-slate-mid leading-relaxed mb-6">An <strong>Object</strong> is the basic storage unit — not just a file, but a complete package. In our kitchen, an object is a jar of tomato sauce: the sauce is the data, the label <code>tomato-sauce-2025</code> is the key, and the sticker with the expiry date is the metadata. Objects range from <strong>0 bytes up to 5 TB</strong> each.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 flex items-center gap-2">🏷️ Key (The Label)</p>
+            <p class="text-slate-mid text-sm leading-relaxed">The unique name within a bucket. Using slashes like <code>recipes/italian/pasta.txt</code> creates a visual "folder" — but it's really just one long string. S3 has no real folders.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 flex items-center gap-2">📄 Value (The Data)</p>
+            <p class="text-slate-mid text-sm leading-relaxed">The actual file content. An image, a PDF, a video, a trained ML model. 2026 updates extended max object size to support giant AI training datasets.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 flex items-center gap-2">📋 Metadata (Nutrition Label)</p>
+            <p class="text-slate-mid text-sm leading-relaxed"><strong>System metadata</strong> is set by S3 itself (Last-Modified, ETag, size). <strong>User metadata</strong> is your custom info like <code>Chef: Mario</code>. Max 2 KB of user metadata per object.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 flex items-center gap-2">🏷️ Tags (Colour-Coded Stickers)</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Up to <strong>10 key-value tags</strong> per object. Unlike metadata, tags can be changed <em>without re-uploading</em> the file. Perfect for cost allocation, access control, and lifecycle rules.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regions & AZs -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl md:text-3xl text-slate mb-2 flex items-center gap-3">
+          <span class="text-3xl">🌍</span> Regions & Availability Zones
+        </h2>
+        <p class="text-slate-mid leading-relaxed mb-4">When you create a bucket you choose a <strong>Region</strong> (e.g. <code>us-east-1</code>, <code>eu-west-1</code>). Inside each region are <strong>Availability Zones (AZs)</strong> — physically separate data centres with independent power and networking.</p>
+        <div class="analogy-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🍳 <strong>Kitchen analogy:</strong> S3 Standard automatically copies your ingredients to <strong>at least three separate kitchen buildings</strong> in the same city. If one building floods, your tomato sauce is perfectly safe in the other two — and you never notice a difference. This is how S3 achieves <strong>eleven nines of durability</strong> (99.999999999%). Store 10 million objects, and you might lose <em>one</em> every 10,000 years.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-foundations -->
+
+    <!-- ── TAB 2: STORAGE CLASSES ── -->
+    <div id="tab-storage" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🥛</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Not All Ingredients Need the Front Shelf</h2>
+            <p class="text-slate-mid leading-relaxed">Milk goes at the front of the fridge — you need it every day. Extra flour can go in the back cupboard. A vintage wine from 2010 goes in the basement vault. S3 has six storage class families that work exactly the same way: the less frequently you access data, the cheaper the storage — but the longer it takes to retrieve.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storage class cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
+
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🔥</span>
+            <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Instant · ms</span>
+          </div>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Standard</h3>
+          <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Front Counter</p>
+          <p class="text-slate-mid text-sm leading-relaxed">For data you touch every day — website images, active user files, real-time analytics. High throughput, millisecond latency, stored in ≥3 AZs. No minimum storage duration.</p>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🧠</span>
+            <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Auto-tiered</span>
+          </div>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Intelligent-Tiering</h3>
+          <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Smart Helper</p>
+          <p class="text-slate-mid text-sm leading-relaxed">Automatically moves objects between five tiers based on actual access patterns. Not touched in 30 days → Infrequent Access. 90 days → Archive Instant. Ideal when you can't predict usage.</p>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">📦</span>
+            <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">ms · lower cost</span>
+          </div>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Standard-IA</h3>
+          <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Side Pantry (3 AZ)</p>
+          <p class="text-slate-mid text-sm leading-relaxed">Infrequent Access. Millisecond retrieval, but you pay a fee per GET. Stored across ≥3 AZs. Good for disaster recovery, long-term backups you occasionally need fast.</p>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🏠</span>
+            <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">ms · 1-AZ risk</span>
+          </div>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 One Zone-IA</h3>
+          <p class="text-slate-light text-xs uppercase tracking-wider mb-2">Single-Building Pantry</p>
+          <p class="text-slate-mid text-sm leading-relaxed">20% cheaper than Standard-IA but lives in <strong>only one AZ</strong>. If that AZ is destroyed, the data is gone. Only use for <em>re-creatable</em> data — like thumbnails generated from originals stored elsewhere.</p>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🧊</span>
+            <span class="tier-badge px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">min → hours</span>
+          </div>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Glacier (3 tiers)</h3>
+          <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Underground Vault</p>
+          <p class="text-slate-mid text-sm leading-relaxed"><strong>Instant:</strong> millisecond retrieval for archives accessed quarterly. <strong>Flexible:</strong> 1–5 hour retrieval, good for backups. <strong>Deep Archive:</strong> 12–48 hours, cheapest storage in the cloud, designed for 7–10 year retention.</p>
+        </div>
+
+        <div class="info-card bg-white rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">⚡</span>
+            <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">10× faster</span>
+          </div>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Express One Zone</h3>
+          <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Turbo Kitchen</p>
+          <p class="text-slate-mid text-sm leading-relaxed">Up to <strong>10× faster</strong> than S3 Standard with 50–80% lower request costs. Uses "Directory Buckets" co-located in one AZ next to your compute. For AI training, HPC, real-time analytics at massive scale.</p>
+        </div>
+
+      </div>
+
+      <!-- Intelligent-Tiering breakdown table -->
+      <h3 class="font-display font-semibold text-xl text-slate mb-4">Intelligent-Tiering — How the 5 Tiers Work</h3>
+      <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-8">
+        <table class="oc-table">
+          <thead><tr><th>Access Tier</th><th>Threshold</th><th>Retrieval Speed</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>Frequent Access</code></td><td>0–30 days touched</td><td>Milliseconds</td><td>Items you use every day</td></tr>
+            <tr><td><code>Infrequent Access</code></td><td>Not touched for 30+ days</td><td>Milliseconds</td><td>Items used once a month</td></tr>
+            <tr><td><code>Archive Instant</code></td><td>Not touched for 90+ days</td><td>Milliseconds</td><td>Used quarterly, needed fast</td></tr>
+            <tr><td><code>Archive Access</code></td><td>Optional opt-in</td><td>3–5 hours</td><td>Deep storage, occasional use</td></tr>
+            <tr><td><code>Deep Archive Access</code></td><td>Optional opt-in</td><td>12 hours</td><td>Compliance-grade deep storage</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Chart: storage cost vs retrieval speed -->
+      <div class="bg-white rounded-2xl border border-slate/10 shadow-sm p-6 md:p-8 mb-6">
+        <h3 class="font-display font-semibold text-xl text-slate mb-2 text-center">Storage Cost vs. Retrieval Speed</h3>
+        <p class="text-slate-light text-sm text-center mb-6">Lower cost always means slower retrieval. Choose based on <em>how often</em> you need the data.</p>
+        <div class="chart-container">
+          <canvas id="storageChart"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /tab-storage -->
+
+    <!-- ── TAB 3: LIFECYCLE & VERSIONING ── -->
+    <div id="tab-workflow" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🗓️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">The Automated Kitchen Manager</h2>
+            <p class="text-slate-mid leading-relaxed">A professional kitchen can't rely on the chef to manually throw out every expired jar. It needs automated rules: "Move tomatoes to the cold store after 30 days. Throw them out after 1 year." S3 has the same system — Lifecycle Policies — plus a Time Machine (Versioning) and Mirror Kitchens (Replication).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lifecycle -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">♻️</span> Lifecycle Policies</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🚚 Transition Actions</h4>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">Automatically move objects to cheaper storage classes as they age. Example rule:</p>
+            <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+              Day 0: Standard<br>
+              ↓ after 30 days<br>
+              Day 30: Standard-IA<br>
+              ↓ after 90 days<br>
+              Day 90: Glacier Flexible<br>
+              ↓ after 365 days<br>
+              Day 365: Deep Archive
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🗑️ Expiration Actions</h4>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">Permanently delete objects on a schedule. Use cases:</p>
+            <ul class="space-y-2 text-slate-mid text-sm">
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> Delete customer feedback logs after 1 year</li>
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> Delete old log files after 90 days</li>
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> <code>AbortIncompleteMultipartUpload</code> after 7 days to clean up partial uploads and stop paying for "half-eaten" ingredients</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Versioning -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⏪</span> Versioning — The Time Machine</h2>
+        <div class="analogy-card rounded-2xl p-5 mb-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🍳 When versioning is ON, S3 never overwrites a file — it keeps all versions. If a chef spills soup on a recipe (accidentally overwrites a critical file), they just look back in time and restore the original version. "Deleting" a file just places a <strong>Delete Marker</strong> on top — the original is still underneath, hidden, retrievable at any time.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🟢</p>
+            <p class="font-bold text-slate text-sm">Versioning Enabled</p>
+            <p class="text-slate-light text-xs mt-1">All versions stored, delete markers used</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">⏸️</p>
+            <p class="font-bold text-slate text-sm">Versioning Suspended</p>
+            <p class="text-slate-light text-xs mt-1">Existing versions kept, new writes unversioned</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🔴</p>
+            <p class="font-bold text-slate text-sm">Versioning Off</p>
+            <p class="text-slate-light text-xs mt-1">Default state. Overwrites replace files permanently</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Replication -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔁</span> Replication — Mirror Kitchens</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1">🌍 Cross-Region (CRR)</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Copies every new object to a bucket in a <strong>different AWS Region</strong>. Ensures people in London get data as fast as people in New York. Also used for disaster recovery across geographies.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1">🏙️ Same-Region (SRR)</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Copies objects to another bucket in the <strong>same region</strong>. Good for maintaining a test/dev copy of production data or sharing data between teams without moving regions.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1">⏱️ Replication Time Control (RTC)</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Guarantees <strong>99.99% of objects are replicated within 15 minutes</strong>. Has an SLA. Pay premium for this — use it for high-stakes compliance or near-real-time DR.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-workflow -->
+
+    <!-- ── TAB 4: SECURITY ── -->
+    <div id="tab-security" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔑</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">S3 is Private by Default</h2>
+            <p class="text-slate-mid leading-relaxed">Only the person who creates a bucket can see inside it — full stop. There is no "make public" checkbox on by default. To open the door to anyone else, you must explicitly grant access. This section covers how those keys and locks work.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block Public Access -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🚧</span> Block Public Access — The Master Gate</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Block public ACLs for <em>new</em> buckets</p>
+            <p class="text-slate-mid text-sm">Stops anyone using old-style ACL keys to open new doors.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Ignore all existing public ACLs</p>
+            <p class="text-slate-mid text-sm">Ignores any old ACL keys that were already distributed.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Block public bucket policies for <em>new</em> buckets</p>
+            <p class="text-slate-mid text-sm">Prevents writing new policy rules that let the internet in.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Block public and cross-account access</p>
+            <p class="text-slate-mid text-sm">The <strong>master kill switch</strong> — keeps the bucket completely private regardless of any other rule. Enable this unless you specifically need a public bucket.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- IAM vs Bucket Policy -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">👤</span> IAM Policies vs. Bucket Policies</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Feature</th><th>IAM Policy</th><th>Bucket Policy</th></tr></thead>
+            <tbody>
+              <tr><td>What it controls</td><td>What an <strong>identity</strong> (user/role) can do</td><td>What can happen to a <strong>specific bucket</strong></td></tr>
+              <tr><td>Where it lives</td><td>Attached to the IAM user/role</td><td>Attached to the S3 bucket itself</td></tr>
+              <tr><td>Analogy</td><td>A keycard given to an employee</td><td>A sign written on the pantry door</td></tr>
+              <tr><td>Cross-account</td><td>Needs trust policies</td><td>Can directly grant cross-account access</td></tr>
+              <tr><td>Format</td><td>JSON with Effect, Action, Resource</td><td>JSON with Effect, Principal, Action, Resource</td></tr>
+              <tr><td>Best for</td><td>Internal users, EC2 roles, Lambda functions</td><td>Public reads, IP restrictions, cross-account grants</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Encryption -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔐</span> Encryption — The Secret Codes</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">SSE-S3</p>
+            <p class="font-bold text-slate mb-1 text-sm">AWS-Managed Keys</p>
+            <p class="text-slate-mid text-sm leading-relaxed">AWS manages everything. Like a built-in safe that locks itself. Zero config, always on by default since Jan 2023.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">SSE-KMS</p>
+            <p class="font-bold text-slate mb-1 text-sm">Customer-Controlled Keys</p>
+            <p class="text-slate-mid text-sm leading-relaxed">You define and manage keys in AWS KMS. Full audit trail. You control who can open the safe and can revoke access instantly.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">SSE-C</p>
+            <p class="font-bold text-slate mb-1 text-sm">Customer-Provided Keys</p>
+            <p class="text-slate-mid text-sm leading-relaxed">You bring your own key with every request. AWS never stores it. Maximum control — but you lose the key, you lose the data, permanently.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Object Lock -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔒</span> Object Lock — The Evidence Locker</h2>
+        <p class="text-slate-mid text-sm leading-relaxed mb-4">Laws often require records to be kept and unmodifiable for years (WORM — Write Once, Read Many). Object Lock enforces this.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🟡 Governance Mode</p>
+            <p class="text-slate-mid text-sm">Regular users can't delete. Privileged users with a special IAM permission <em>can</em> override and delete if needed.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🔴 Compliance Mode</p>
+            <p class="text-slate-mid text-sm"><strong>No one</strong> — not even the AWS root account owner — can delete the object until the retention period expires. Ironclad for regulated industries.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">⚠️ Legal Hold</p>
+            <p class="text-slate-mid text-sm">Indefinite lock with no expiry timer. Stays on until a manager with <code>s3:PutObjectLegalHold</code> permission manually removes it.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-security -->
+
+    <!-- ── TAB 5: PERFORMANCE ── -->
+    <div id="tab-performance" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏎️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Moving Large Crates Faster</h2>
+            <p class="text-slate-mid leading-relaxed">When the restaurant scales to a factory, you need better vehicles. Moving one giant 10 GB crate in one go is risky — if you drop it, you restart from zero. S3 gives you three ways to move data faster and more reliably at scale.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 mb-10">
+
+        <!-- Multipart -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">📦</div>
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">Multipart Upload</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Required above 5 GB</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-3">Break a giant file into smaller parts (minimum 5 MB each), upload them all in parallel, and S3 assembles them at the destination. If any one part fails, only that part needs to be re-uploaded.</p>
+              <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+                File: 10 GB video<br>
+                ↓ split into 100 parts × 100 MB<br>
+                ↓ upload 10 parts simultaneously<br>
+                ↓ S3 re-assembles automatically<br>
+                Result: ~5× faster, failure-safe
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transfer Acceleration -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🚀</div>
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">Transfer Acceleration</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Edge Network</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-3">The public internet is like a crowded city street with traffic lights. Transfer Acceleration routes your data onto AWS's private high-speed backbone at the nearest <strong>Edge Location</strong> (there are 400+ worldwide), bypassing the public internet entirely.</p>
+              <div class="flex items-center gap-3 text-sm mt-2">
+                <span class="flex-1 text-center py-2 rounded-lg bg-slate/10 text-slate-mid font-mono text-xs">Normal upload<br><strong class="text-red-500">via public internet</strong></span>
+                <span class="text-amber font-bold">→</span>
+                <span class="flex-1 text-center py-2 rounded-lg bg-amber-pale text-amber-light font-mono text-xs">Accelerated upload<br><strong class="text-amber">via AWS backbone</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S3 Select -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🍒</div>
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">S3 Select</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">SQL on objects</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-3">Normally if you want one cherry from a 10-gallon drum of fruit, you have to download the entire drum. S3 Select lets you run a SQL-like query <em>inside S3</em> before the data leaves storage. Only the matching rows are sent back to you.</p>
+              <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300">
+                SELECT s.name, s.revenue<br>
+                FROM s3object s<br>
+                WHERE s.revenue > 1000000
+              </div>
+              <p class="text-slate-light text-xs mt-2">Works on CSV, JSON, and Parquet files. Can cut data transfer by 80–98% for analytical queries.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Management: Inventory + Storage Lens -->
+      <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">📋</span> Management & Analytics</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+        <div class="info-card bg-white rounded-2xl p-6">
+          <p class="text-3xl mb-3">📊</p>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Inventory</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-3">A daily or weekly CSV/ORC/Parquet report of every object in your bucket — its size, storage class, encryption status, replication status, and more. Far cheaper than using the List API to manually count billions of objects.</p>
+        </div>
+        <div class="info-card bg-white rounded-2xl p-6">
+          <p class="text-3xl mb-3">🖥️</p>
+          <h3 class="font-display font-semibold text-lg text-slate mb-1">S3 Storage Lens</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-3">An organisation-wide dashboard covering all accounts and regions. Gives contextual recommendations — e.g. "You're paying S3 Standard prices for 800 TB of data no one has accessed in 4 months. Move it to Intelligent-Tiering."</p>
+          <div class="rounded-xl overflow-hidden border border-slate/10">
+            <table class="oc-table text-xs">
+              <thead><tr><th>Tier</th><th>Metrics</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Free</td><td>62 metrics, 14 days history</td><td>$0</td></tr>
+                <tr><td>Advanced</td><td>136+ metrics, 15 months history, prefix-level</td><td>Per-object charge</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-performance -->
+
+    <!-- ── TAB 6: AI & FUTURE ── -->
+    <div id="tab-future" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🤖</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">2025–2026 Evolution</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">S3 is Now an AI Engine</h2>
+            <p class="text-slate-mid leading-relaxed">As of 2026, S3 has evolved from a storage service into the active data layer of the AI era. Three new capabilities — S3 Tables, S3 Vectors, and S3 Access Grants — have fundamentally changed what S3 can do.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 mb-10">
+
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">📊</div>
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">S3 Tables</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">10× faster queries</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-3">Traditional S3 objects (CSV, JSON) are hard for big data engines to read efficiently. S3 Tables are a new bucket type built on the <strong>Apache Iceberg</strong> open-table format. They self-optimise — automatically compacting, sorting, and indexing data so that query engines like Athena and Spark can read them <strong>10× faster</strong> than standard S3 files.</p>
+              <div class="flex gap-3 flex-wrap text-xs">
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Apache Iceberg format</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Auto-compaction</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">ACID transactions</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Time-travel queries</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🧠</div>
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">S3 Vectors</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">90% cheaper than vector DBs</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-3">AI models think in <strong>vectors</strong> — long lists of numbers that represent the meaning of text, images, or audio. S3 Vectors lets AI agents store and query billions of these vectors directly in S3, at up to 90% lower cost than a dedicated vector database. This is how an AI can remember every customer interaction, every document it has ever read, at petabyte scale.</p>
+              <div class="analogy-card rounded-xl p-4 text-sm text-slate-mid">
+                🍳 <strong>Kitchen analogy:</strong> Imagine the AI chef has a card-catalogue of 10 billion flavour memories. Every dish, every ingredient combination. S3 Vectors stores all of these memories at near-zero cost, so the AI can instantly look up "what went well with truffle?" from 10 billion past experiences.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🏢</div>
+            <div>
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-display font-bold text-xl text-slate">S3 Access Grants</h3>
+                <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Enterprise IAM integration</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed mb-3">Managing thousands of IAM policies was a nightmare at enterprise scale. S3 Access Grants connects S3 to your existing <strong>corporate identity directory</strong> (Active Directory, Okta, etc.). When a new employee joins, they automatically get the right S3 access based on their job role — no one needs to write a new IAM policy for them.</p>
+              <div class="flex gap-3 flex-wrap text-xs">
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">AWS IAM Identity Center</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Active Directory sync</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Prefix-level grants</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Summary / Conclusion -->
+      <div class="rounded-2xl bg-slate p-8 text-white">
+        <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Summary</p>
+        <h2 class="font-display font-bold text-2xl md:text-3xl mb-4">The Professional S3 Practitioner</h2>
+        <p class="text-slate-light leading-relaxed mb-4">Mastering S3 means understanding all six layers: <strong class="text-white">Foundations</strong> (buckets, objects, keys), <strong class="text-white">Storage Classes</strong> (cost vs. speed trade-offs), <strong class="text-white">Lifecycle automation</strong> (moving and expiring data), <strong class="text-white">Security</strong> (Block Public Access, IAM, encryption, Object Lock), <strong class="text-white">Performance tools</strong> (Multipart, Acceleration, Select), and the new <strong class="text-white">AI capabilities</strong> (Tables, Vectors, Access Grants).</p>
+        <p class="text-slate-light leading-relaxed">As S3 approaches its 20th anniversary in 2026, it has transformed from a simple file store into the central nervous system of the AI-driven enterprise. Understanding its mechanics deeply is an essential skill for the modern era.</p>
+        <div class="flex flex-wrap gap-3 mt-6">
+          <a href="SagemakerAI.html" class="px-4 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors">Next: AWS SageMaker AI →</a>
+          <a href="index.html" class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← All Topics</a>
+        </div>
+      </div>
+
+    </div><!-- /tab-future -->
+
+  </main>
+</div>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark border-t border-slate/10 mt-12">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <p class="font-body text-slate-light text-xs text-center">Built with ❤️ on GitHub Pages · No jargon, just clarity.</p>
+    <div class="flex items-center gap-5">
+      <a href="index.html#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* ── Mobile menu ── */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* ── Reading progress bar ── */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('read-progress').style.width = (scrolled * 100) + '%';
+    const nav = document.getElementById('navbar');
+    nav.style.boxShadow = doc.scrollTop > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* ── Tab switching ── */
+  function switchTab(id) {
+    // Panels
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+
+    // Tab buttons
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === id);
+    });
+
+    // TOC links
+    document.querySelectorAll('.toc-link').forEach(l => {
+      l.classList.toggle('active', l.dataset.tab === id);
+    });
+
+    // Render chart if switching to storage tab
+    if (id === 'storage') renderStorageChart();
+  }
+
+  /* ── Storage Classes Chart ── */
+  let storageChartInstance = null;
+  function renderStorageChart() {
+    const ctx = document.getElementById('storageChart');
+    if (!ctx) return;
+    if (storageChartInstance) storageChartInstance.destroy();
+
+    storageChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Standard', 'Intelligent\nTiering', 'Standard-IA', 'One Zone-IA', 'Glacier\nInstant', 'Glacier\nFlexible', 'Glacier\nDeep Archive', 'Express\nOne Zone'],
+        datasets: [
+          {
+            label: 'Relative Storage Cost (lower = cheaper)',
+            data: [100, 65, 55, 44, 30, 12, 4, 90],
+            backgroundColor: [
+              'rgba(255,153,0,0.85)', 'rgba(255,153,0,0.70)',
+              'rgba(35,47,62,0.70)',  'rgba(35,47,62,0.55)',
+              'rgba(99,102,241,0.75)','rgba(99,102,241,0.60)',
+              'rgba(99,102,241,0.45)','rgba(255,153,0,0.95)',
+            ],
+            borderColor: 'transparent',
+            borderRadius: 8,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(35,47,62,0.95)',
+            titleFont: { size: 13, family: 'DM Sans' },
+            bodyFont:  { size: 12, family: 'Roboto Mono' },
+            padding: 12,
+            callbacks: {
+              label: ctx => {
+                const speeds = ['Milliseconds','Milliseconds','Milliseconds','Milliseconds','Milliseconds','1–5 hours','12–48 hours','Milliseconds'];
+                return [`Cost index: ${ctx.raw}`, `Retrieval: ${speeds[ctx.dataIndex]}`];
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: {
+            title: { display: true, text: 'Relative Cost Index (S3 Standard = 100)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' },
+            suggestedMax: 115
+          }
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>
