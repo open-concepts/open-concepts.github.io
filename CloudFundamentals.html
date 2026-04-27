@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+  @font-face {
+    font-family: 'MySignature';
+    src: url('signature.ttf'); 
+    font-display: swap;
+  }
+</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Fundamentals — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active { border-bottom: 3px solid #FF9900; color: #232F3E; font-weight: 700; }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    .pro-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07); color: #232F3E;
+      padding: 2px 6px; border-radius: 4px; font-size: 0.82em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up  { animation: fadeUp 0.5s ease both; }
+    .delay-1  { animation-delay: 0.08s; }
+    .delay-2  { animation-delay: 0.16s; }
+    .delay-3  { animation-delay: 0.24s; }
+
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08);
+      border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900; border-left-color: #FF9900; padding-left: 8px;
+    }
+
+    /* Layer stack for IaaS/PaaS/SaaS visual */
+    .stack-layer {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stack-layer:hover { transform: translateX(6px); box-shadow: -4px 0 0 #FF9900; }
+  </style>
+</head>
+<body class="min-h-screen relative antialiased">
+
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">☁️ Cloud</span>
+      <span>›</span>
+      <span class="text-slate-mid">Cloud Fundamentals</span>
+    </div>
+
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">Cloud Computing?</span>
+    </h1>
+
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      From owning a private power plant to simply plugging into the grid — the complete guide to cloud fundamentals, AWS infrastructure, and the five pillars every practitioner must master.
+    </p>
+
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~20 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">☁️ Cloud · AWS · Fundamentals</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ QUICK OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">💡</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">On-Demand</p>
+      <p class="text-slate-light text-xs mt-1">Resources when you need them</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">💳</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Pay-as-you-go</p>
+      <p class="text-slate-light text-xs mt-1">Only for seconds you use</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">↔️</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Elastic Scale</p>
+      <p class="text-slate-light text-xs mt-1">Grow or shrink instantly</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🌍</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Global Reach</p>
+      <p class="text-slate-light text-xs mt-1">Deploy anywhere in seconds</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- TOC Sidebar -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('onprem')"     class="toc-link py-0.5 cursor-pointer active" data-tab="onprem">① Before the Cloud</a>
+        <a onclick="switchTab('cloud')"      class="toc-link py-0.5 cursor-pointer" data-tab="cloud">② How Cloud Works</a>
+        <a onclick="switchTab('models')"     class="toc-link py-0.5 cursor-pointer" data-tab="models">③ IaaS / PaaS / SaaS</a>
+        <a onclick="switchTab('regions')"    class="toc-link py-0.5 cursor-pointer" data-tab="regions">④ Regions & AZs</a>
+        <a onclick="switchTab('ec2')"        class="toc-link py-0.5 cursor-pointer" data-tab="ec2">⑤ EC2 — Compute</a>
+        <a onclick="switchTab('s3rds')"      class="toc-link py-0.5 cursor-pointer" data-tab="s3rds">⑥ S3 & RDS</a>
+        <a onclick="switchTab('vpc')"        class="toc-link py-0.5 cursor-pointer" data-tab="vpc">⑦ VPC — Networking</a>
+        <a onclick="switchTab('iam')"        class="toc-link py-0.5 cursor-pointer" data-tab="iam">⑧ IAM — Identity</a>
+        <a onclick="switchTab('console')"    class="toc-link py-0.5 cursor-pointer" data-tab="console">⑨ Console & Costs</a>
+      </nav>
+      <a href="index.html" class="mt-8 flex items-center gap-2 text-xs text-slate-light hover:text-amber transition-colors font-semibold">← Back to Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- Article content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Section Tabs -->
+    <div class="overflow-x-auto -mx-1 px-1 mb-8">
+      <div class="flex gap-1 bg-white rounded-2xl border border-slate/10 p-1.5 w-max shadow-sm">
+        <button onclick="switchTab('onprem')"  class="tab-btn active  px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="onprem">🏚️ Before Cloud</button>
+        <button onclick="switchTab('cloud')"   class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="cloud">☁️ How It Works</button>
+        <button onclick="switchTab('models')"  class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="models">🧱 IaaS/PaaS/SaaS</button>
+        <button onclick="switchTab('regions')" class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="regions">🌍 Regions & AZs</button>
+        <button onclick="switchTab('ec2')"     class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="ec2">🖥️ EC2</button>
+        <button onclick="switchTab('s3rds')"   class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="s3rds">🗄️ S3 & RDS</button>
+        <button onclick="switchTab('vpc')"     class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="vpc">🔗 VPC</button>
+        <button onclick="switchTab('iam')"     class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="iam">🔑 IAM</button>
+        <button onclick="switchTab('console')" class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="console">💰 Console & Costs</button>
+      </div>
+    </div>
+
+
+    <!-- ══ TAB 1: BEFORE THE CLOUD ══ -->
+    <div id="tab-onprem" class="tab-panel active">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏚️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Building Your Own Power Plant</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">Traditional computing was like owning a restaurant where you had to <strong>build the building, buy every stove and refrigerator, and hire a full-time repairman</strong> just in case the oven broke. If you had a busy Friday night, you couldn't suddenly make the kitchen bigger — customers simply had to wait. If Tuesday was slow, the stoves sat hot and unused, wasting gas and money.</p>
+            <p class="text-slate-mid leading-relaxed">This is exactly how businesses ran their digital infrastructure for decades. They bought physical servers, rented air-conditioned rooms to keep them cool, and hired full IT teams to manage the wiring and software updates.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- On-prem challenges table -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚠️</span> Core Challenges of On-Premise Infrastructure</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Challenge</th><th>Traditional System</th><th>Impact on Business</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Initial Cost</strong></td>
+                <td>High upfront capital expenditure on hardware and space</td>
+                <td>Limits startups and small businesses from even starting</td>
+              </tr>
+              <tr>
+                <td><strong>Scalability</strong></td>
+                <td>Slow — requires ordering, shipping, and installing new metal boxes</td>
+                <td>Businesses crash during sudden traffic spikes</td>
+              </tr>
+              <tr>
+                <td><strong>Maintenance</strong></td>
+                <td>24/7 dedicated IT staff for physical repairs</td>
+                <td>High ongoing cost; distraction from core business goals</td>
+              </tr>
+              <tr>
+                <td><strong>Reliability</strong></td>
+                <td>Single point of failure — one broken server stops the service</td>
+                <td>High risk of costly, embarrassing downtime</td>
+              </tr>
+              <tr>
+                <td><strong>Updates</strong></td>
+                <td>Manual hardware and software upgrades every few years</td>
+                <td>Systems quickly become obsolete and insecure</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Energy waste callout -->
+        <div class="pro-card rounded-2xl p-6">
+          <h4 class="font-bold text-slate mb-2 flex items-center gap-2">⚡ The Energy Waste Problem</h4>
+          <p class="text-slate-mid text-sm leading-relaxed">Because most companies bought more servers than they needed "just in case," those servers typically ran at <strong>less than 10% capacity</strong> — while still drawing full power for cooling systems. A massive waste of energy and money, all to handle a traffic spike that might never come.</p>
+        </div>
+      </div>
+
+      <!-- CapEx vs OpEx -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">💰</span> CapEx vs. OpEx — The Financial Shift</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="tier-badge text-red-600 mb-2">Before Cloud</p>
+            <h4 class="font-display font-bold text-lg text-slate mb-2">Capital Expenditure (CapEx)</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Spending large sums of money <em>upfront</em> to buy physical assets — servers, racks, cabling, cooling systems. The money is spent before a single customer arrives. If the business fails, the hardware is a sunk cost.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="tier-badge text-green-700 mb-2">After Cloud</p>
+            <h4 class="font-display font-bold text-lg text-slate mb-2">Operational Expenditure (OpEx)</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Paying for computing as a <em>day-to-day running cost</em> — like a utility bill. You pay only for the minutes or seconds you actually use a computer. Start small, grow only when demand arrives, stop paying the moment you stop using it.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-onprem -->
+
+
+    <!-- ══ TAB 2: HOW THE CLOUD WORKS ══ -->
+    <div id="tab-cloud" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔌</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Plugging Into the Grid</h2>
+            <p class="text-slate-mid leading-relaxed">Cloud computing transformed computing power into a service delivered over the internet — just like electricity. Instead of owning a private generator, you plug into the electrical grid and pay for the kilowatt-hours you use. "The cloud" is simply <strong>massive data centres filled with thousands of powerful computers</strong>, located globally, managed by providers like AWS.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Virtualisation -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🪄</span> Virtualisation — The Magic Behind the Cloud</h2>
+        <div class="analogy-card rounded-2xl p-5 mb-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🏢 <strong>Apartment block analogy:</strong> A single massive physical server in an AWS data centre can be split into hundreds of <strong>Virtual Machines (VMs)</strong>, each acting like an independent computer. This is <em>multi-tenancy</em> — multiple users safely sharing the same large hardware, like people living in separate apartments in one building. No hardware sits idle, and costs are shared among many users.</p>
+        </div>
+
+        <!-- Four cloud features -->
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Cloud Feature</th><th>Description</th><th>Simple Analogy</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>On-Demand</strong></td>
+                <td>Resources available immediately when requested</td>
+                <td>Turning on a water tap</td>
+              </tr>
+              <tr>
+                <td><strong>Pay-as-you-go</strong></td>
+                <td>Pay only for the minutes or seconds you use</td>
+                <td>A taxi meter that only runs while you're in the car</td>
+              </tr>
+              <tr>
+                <td><strong>Elasticity</strong></td>
+                <td>System automatically grows or shrinks based on demand</td>
+                <td>A magical balloon that expands as you put more things in it</td>
+              </tr>
+              <tr>
+                <td><strong>Global Reach</strong></td>
+                <td>Services launched in different countries in seconds</td>
+                <td>Having a kitchen in every city in the world at your disposal</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CapEx vs OpEx chart -->
+      <div class="bg-white rounded-2xl border border-slate/10 shadow-sm p-6 md:p-8">
+        <h3 class="font-display font-semibold text-xl text-slate mb-2 text-center">On-Premise vs. Cloud — Cost Over Time</h3>
+        <p class="text-slate-light text-sm text-center mb-6">Cloud shifts the heavy upfront investment into a smooth, usage-based operating cost that scales with your actual demand.</p>
+        <div class="chart-container">
+          <canvas id="costChart"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /tab-cloud -->
+
+
+    <!-- ══ TAB 3: IaaS / PaaS / SaaS ══ -->
+    <div id="tab-models" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🧱</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">How Much Control Do You Want?</h2>
+            <p class="text-slate-mid leading-relaxed">The cloud isn't one thing — it's a spectrum of how much responsibility you take on vs. how much you hand off to AWS. The further up the stack you go, the less infrastructure you manage and the more you focus purely on your product.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stack layers visual -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-6 flex items-center gap-3"><span class="text-2xl">📚</span> The Service Model Stack</h2>
+
+        <div class="space-y-4 mb-8">
+
+          <!-- IaaS -->
+          <div class="stack-layer bg-white rounded-2xl border border-slate/10 p-6 pl-7">
+            <div class="flex flex-col md:flex-row md:items-start gap-4">
+              <div class="flex-shrink-0">
+                <span class="tier-badge px-3 py-1.5 rounded-xl bg-slate text-white text-xs">IaaS</span>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-display font-bold text-xl text-slate mb-1">Infrastructure as a Service</h3>
+                <p class="text-slate-light text-xs uppercase tracking-wider mb-3">Maximum Control · Maximum Responsibility</p>
+                <p class="text-slate-mid text-sm leading-relaxed mb-3">The most basic building blocks: virtual servers, networking, and storage. Like <strong>renting a piece of land to build a house</strong>. AWS provides the ground, the pipes for water and electricity — but you build the walls, choose the furniture, and decide who enters.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">EC2 (Virtual Servers)</span>
+                  <span class="px-2 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">VPC (Networking)</span>
+                  <span class="px-2 py-1 rounded-full bg-slate/10 text-slate text-xs font-semibold border border-slate/15">EBS (Storage)</span>
+                </div>
+              </div>
+              <div class="text-3xl flex-shrink-0">🏗️</div>
+            </div>
+          </div>
+
+          <!-- PaaS -->
+          <div class="stack-layer bg-white rounded-2xl border border-slate/10 p-6 pl-7">
+            <div class="flex flex-col md:flex-row md:items-start gap-4">
+              <div class="flex-shrink-0">
+                <span class="tier-badge px-3 py-1.5 rounded-xl bg-amber text-white text-xs">PaaS</span>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-display font-bold text-xl text-slate mb-1">Platform as a Service</h3>
+                <p class="text-slate-light text-xs uppercase tracking-wider mb-3">Balanced Control · OS & Hardware Managed For You</p>
+                <p class="text-slate-mid text-sm leading-relaxed mb-3">Removes the need to manage the operating system or physical hardware. Like <strong>renting a fully-equipped professional kitchen</strong>. The ovens, tools, and electricity are maintained for you — you only bring your ingredients (code) and start cooking (running your app).</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-1 rounded-full bg-amber-pale text-amber text-xs font-semibold border border-amber/25">Elastic Beanstalk</span>
+                  <span class="px-2 py-1 rounded-full bg-amber-pale text-amber text-xs font-semibold border border-amber/25">AWS Lambda</span>
+                  <span class="px-2 py-1 rounded-full bg-amber-pale text-amber text-xs font-semibold border border-amber/25">RDS</span>
+                </div>
+              </div>
+              <div class="text-3xl flex-shrink-0">🍳</div>
+            </div>
+          </div>
+
+          <!-- SaaS -->
+          <div class="stack-layer bg-white rounded-2xl border border-slate/10 p-6 pl-7">
+            <div class="flex flex-col md:flex-row md:items-start gap-4">
+              <div class="flex-shrink-0">
+                <span class="tier-badge px-3 py-1.5 rounded-xl bg-green-700 text-white text-xs">SaaS</span>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-display font-bold text-xl text-slate mb-1">Software as a Service</h3>
+                <p class="text-slate-light text-xs uppercase tracking-wider mb-3">Least Control · Everything Managed For You</p>
+                <p class="text-slate-mid text-sm leading-relaxed mb-3">A complete product run and managed entirely by the provider. Like <strong>eating at a restaurant</strong> — you sit down, order, and enjoy. You don't care how the stove works or who cleaned the floor. You just want the food.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-200">Gmail</span>
+                  <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-200">Salesforce</span>
+                  <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-200">Netflix</span>
+                </div>
+              </div>
+              <div class="text-3xl flex-shrink-0">🍽️</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Responsibility comparison -->
+        <div class="pro-card rounded-2xl p-6">
+          <h4 class="font-bold text-slate mb-4">📊 Shared Responsibility at a Glance</h4>
+          <div class="rounded-xl overflow-hidden border border-slate/10">
+            <table class="oc-table text-xs">
+              <thead><tr><th>Layer</th><th>IaaS</th><th>PaaS</th><th>SaaS</th></tr></thead>
+              <tbody>
+                <tr><td>Physical hardware</td><td class="text-slate-light">AWS ✓</td><td class="text-slate-light">AWS ✓</td><td class="text-slate-light">AWS ✓</td></tr>
+                <tr><td>Operating system</td><td class="text-amber font-semibold">You ✓</td><td class="text-slate-light">AWS ✓</td><td class="text-slate-light">AWS ✓</td></tr>
+                <tr><td>Runtime / middleware</td><td class="text-amber font-semibold">You ✓</td><td class="text-slate-light">AWS ✓</td><td class="text-slate-light">AWS ✓</td></tr>
+                <tr><td>Application / data</td><td class="text-amber font-semibold">You ✓</td><td class="text-amber font-semibold">You ✓</td><td class="text-slate-light">AWS ✓</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-models -->
+
+
+    <!-- ══ TAB 4: REGIONS & AZs ══ -->
+    <div id="tab-regions" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🌍</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">A City Full of Restaurant Districts</h2>
+            <p class="text-slate-mid leading-relaxed">AWS doesn't just exist "in the air" — it's built on a massive global physical foundation. To ensure your website never goes down, AWS organises its data centres into a hierarchy: individual <strong>Data Centres</strong> (single restaurants) → <strong>Availability Zones</strong> (streets of restaurants) → <strong>Regions</strong> (entire food districts of a city).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Region → AZ → DC hierarchy -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🗺️</span> The Geography Hierarchy</h2>
+
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Component</th><th>What It Is</th><th>Kitchen Analogy</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Data Centre</strong></td>
+                <td>A single building full of computers with independent power and cooling</td>
+                <td>A single restaurant</td>
+              </tr>
+              <tr>
+                <td><strong>Availability Zone (AZ)</strong></td>
+                <td>2–6 data centres in one neighbourhood, connected by high-speed private links</td>
+                <td>A street full of different restaurants</td>
+              </tr>
+              <tr>
+                <td><strong>Region</strong></td>
+                <td>2–6 AZs in a large geographic area (e.g. N. Virginia, Tokyo, London)</td>
+                <td>The entire city's food district</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🏘️ Why Multiple AZs?</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">If a storm causes a power outage in one neighbourhood (one AZ), your server in the other neighbourhood (another AZ) keeps running. Customers never notice a problem. This is called <strong>High Availability</strong> — ensuring a system is almost always working.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🗺️ How to Choose a Region</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Choose the region <strong>closest to your users</strong> to minimise latency. Also consider data residency laws — some countries require data to stay within their borders. Check the Region Selector in the AWS Console top-right.</p>
+          </div>
+        </div>
+
+        <!-- Warning callout -->
+        <div class="rounded-2xl bg-amber-pale border border-amber/30 p-5 flex items-start gap-4">
+          <span class="text-2xl flex-shrink-0">⚠️</span>
+          <div>
+            <p class="font-bold text-slate text-sm mb-1">The Most Common Beginner Mistake</p>
+            <p class="text-slate-mid text-sm leading-relaxed">If you launch a server in "Oregon" but your website configuration is in "Virginia," you won't be able to see it. <strong>Always check the Region Selector</strong> (top-right of the AWS Console) before creating any resource.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-regions -->
+
+
+    <!-- ══ TAB 5: EC2 ══ -->
+    <div id="tab-ec2" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🖥️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Renting a Computer in a Data Centre</h2>
+            <p class="text-slate-mid leading-relaxed">Amazon EC2 is the most fundamental service in AWS. It allows you to launch a <strong>virtual server</strong> — a computer that lives in an AWS data centre instead of on your desk. You choose the size, the operating system, the security rules, and the storage, then switch it on. Pay for every second it runs; stop paying the moment you turn it off.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Launch anatomy -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🚀</span> Anatomy of an EC2 Launch</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">🏷️ Name & Tags</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Give your server a name like <code>My-Web-Server</code>. Tags are key-value labels on a moving box that help you find and organise resources later — e.g. <code>Environment: Production</code>.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">🧠 AMI (Amazon Machine Image)</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The "brain" template for your server. Determines the operating system (Linux, free and popular for servers; or Windows) and any pre-installed software. Think of it as the recipe for what kind of computer you're creating.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">💪 Instance Type</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Determines the CPU power and RAM. In a name like <code>m5.large</code>: <strong>M</strong> is the family (General Purpose), <strong>5</strong> is the generation (newer is better), <strong>large</strong> is the size. <code>t2.micro</code> is Free Tier eligible — free for new accounts.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">🔑 Key Pair</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A digital key file you download to your computer. Like a physical key to a door — without it, you cannot SSH (remotely log in) to your server. <strong>Download it once; if you lose it, you're locked out permanently.</strong></p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">🔥 Security Groups</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A virtual firewall controlling what traffic can reach your server. You define rules: "Allow Port 80 (website traffic) from anywhere" and "Allow Port 22 (SSH login) from my IP only".</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">💾 EBS Storage</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The virtual hard drive attached to your server where files are saved. Persists independently of the instance — if you stop the server, the data is still there.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instance families table -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">⚙️</span> Choosing the Right Instance Family</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm">
+          <table class="oc-table">
+            <thead><tr><th>Family</th><th>Best Used For</th><th>Simple Analogy</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>M, T</code> — <strong>General Purpose</strong></td>
+                <td>Balanced resources: web servers, small apps, dev environments</td>
+                <td>A Swiss Army knife — good at everything</td>
+              </tr>
+              <tr>
+                <td><code>C</code> — <strong>Compute Optimised</strong></td>
+                <td>High-power maths, scientific modelling, gaming servers</td>
+                <td>A specialised race-car engine</td>
+              </tr>
+              <tr>
+                <td><code>R, X</code> — <strong>Memory Optimised</strong></td>
+                <td>Large databases and in-memory analytics that need vast RAM</td>
+                <td>A massive desk that holds a thousand books at once</td>
+              </tr>
+              <tr>
+                <td><code>I, D</code> — <strong>Storage Optimised</strong></td>
+                <td>Very fast reading and writing of huge files</td>
+                <td>A high-speed delivery truck</td>
+              </tr>
+              <tr>
+                <td><code>P, G</code> — <strong>Accelerated Computing</strong></td>
+                <td>AI/ML training, video rendering, graphics-heavy workloads</td>
+                <td>Adding a powerful telescope to a standard lab</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tab-ec2 -->
+
+
+    <!-- ══ TAB 6: S3 & RDS ══ -->
+    <div id="tab-s3rds" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🗄️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Where Your Files and Data Live</h2>
+            <p class="text-slate-mid leading-relaxed">Every application needs two kinds of storage: a place to put <strong>files</strong> (images, videos, documents — that's S3) and a place to put <strong>structured data</strong> (customer records, orders, accounts — that's RDS). Together they cover the full storage needs of almost any application.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- S3 Section -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🪣</span> Amazon S3 — Object Storage</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">S3 stores files called <strong>objects</strong> inside containers called <strong>buckets</strong>. Unlike a normal computer with folders inside folders, S3 is a <em>flat storage system</em>. AWS automatically replicates every object across at least three AZs for 11-nines durability (99.999999999%).</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🪣</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Buckets</h4>
+            <p class="text-slate-mid text-xs">Containers for your data. Every bucket must have a <strong>globally unique name</strong> — if someone names their bucket <code>my-photos</code>, no one else in the world can use that name.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📄</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Objects & Keys</h4>
+            <p class="text-slate-mid text-xs">Files are "objects." The "key" is the file's name within the bucket, e.g. <code>vacation/beach.jpg</code>. Slashes look like folders but S3 has no real folder structure.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🔒</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Private by Default</h4>
+            <p class="text-slate-mid text-xs">Everything in S3 is <strong>private and locked</strong> when you upload it. You must explicitly choose to make a file public. Never assume something is private without checking.</p>
+          </div>
+        </div>
+
+        <!-- S3 storage classes table -->
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Storage Class</th><th>When to Use It</th><th>Kitchen Analogy</th></tr></thead>
+            <tbody>
+              <tr><td><strong>S3 Standard</strong></td><td>Files accessed every day — website images, active assets</td><td>Items on your kitchen counter</td></tr>
+              <tr><td><strong>S3 Intelligent-Tiering</strong></td><td>Unpredictable access; AWS moves data between tiers automatically</td><td>A pantry that moves your favourite snacks to the front</td></tr>
+              <tr><td><strong>S3 Standard-IA</strong></td><td>Infrequent access; needed fast when requested — backups</td><td>Tools in the garage you use once a month</td></tr>
+              <tr><td><strong>S3 Glacier</strong></td><td>Archival; retrieval takes minutes to hours — compliance</td><td>Boxes in a storage unit across town</td></tr>
+              <tr><td><strong>S3 Glacier Deep Archive</strong></td><td>Cheapest; data you might never look at — 7–10 year retention</td><td>A time capsule buried in the backyard</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RDS Section -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🗃️</span> Amazon RDS — Managed Relational Databases</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">A database organises data into tables like a digital spreadsheet. Before the cloud, setting up a database meant if the server it lived on broke, all data could be lost. RDS automates setup, automated backups, software patching, and failover.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-3 text-sm">⚙️ Key Features</h4>
+            <ul class="space-y-2 text-slate-mid text-sm">
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> <strong>Engines:</strong> MySQL, PostgreSQL, Oracle, SQL Server, MariaDB</li>
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> <strong>Automated Backups:</strong> Daily snapshots — restore to any point in the past</li>
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> <strong>Multi-AZ:</strong> Standby copy in a different AZ for instant failover</li>
+              <li class="flex items-start gap-2"><span class="text-amber mt-0.5">→</span> <strong>Scaling:</strong> More CPU, RAM, and storage with a button click</li>
+            </ul>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-3 text-sm">🚀 RDS Creation Checklist</h4>
+            <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+              1. Standard Create (full control)<br>
+              &nbsp;&nbsp; OR Easy Create (best defaults)<br>
+              2. DB Identifier: customer-db-1<br>
+              3. Master Password: [secure!]<br>
+              4. Public Access: NO ← always<br>
+              5. Multi-AZ: YES ← for production<br>
+              6. Automated backups: ON ← always
+            </div>
+          </div>
+        </div>
+
+        <div class="analogy-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🗃️ <strong>Multi-AZ failover:</strong> RDS creates a "standby" copy of your database in a different neighbourhood (AZ). If the primary database breaks, AWS instantly switches to the standby — typically in under 60 seconds. This is called <strong>automatic failover</strong>, and your application reconnects to the new primary without you doing anything.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-s3rds -->
+
+
+    <!-- ══ TAB 7: VPC — NETWORKING ══ -->
+    <div id="tab-vpc" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏘️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Your Private Fenced-Off Section of the Cloud</h2>
+            <p class="text-slate-mid leading-relaxed">The entire AWS cloud is like a giant public park. A VPC is a small section of that park that <strong>you fence off and lock</strong>. You decide who comes inside, what rooms they can enter, and what they're allowed to do. Everything inside is invisible to the rest of the world unless you explicitly open a door.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VPC anatomy -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🏗️</span> Anatomy of a VPC</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🏠</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Public Subnet</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A room <strong>with a window to the outside</strong>. This is where your web servers and load balancers live — the parts that talk to the internet. Connected to the Internet Gateway.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🔒</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Private Subnet</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A room <strong>with no windows and a locked door</strong>. Databases and internal APIs live here. No direct internet access — only your web servers in the public subnet can reach it.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🚪</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Internet Gateway (IGW)</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The <strong>front gate</strong> of your VPC. Without attaching an IGW, your VPC is completely cut off from the internet. Must be attached for public subnet resources to receive external traffic.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🗺️</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Route Table</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A set of rules — like a map — telling data where to go. Example: "If someone wants to reach the website, send them to the public subnet. If traffic needs to go to the internet, send it to the IGW."</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📊</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">CIDR Block</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A fancy name for a <strong>range of IP addresses</strong> (digital house numbers) your VPC is allowed to use. For example <code>10.0.0.0/16</code> gives you 65,536 private IP addresses to assign to resources.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Groups vs NACLs -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🛡️</span> Two Layers of Security</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Component</th><th>Guards</th><th>Type</th><th>Rules</th><th>Analogy</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Security Group</strong></td>
+                <td>Individual instance (server)</td>
+                <td class="text-green-700 font-semibold">Stateful</td>
+                <td>Allow only</td>
+                <td>A smart doorbell that remembers you</td>
+              </tr>
+              <tr>
+                <td><strong>Network ACL</strong></td>
+                <td>Entire subnet (neighbourhood)</td>
+                <td class="text-amber font-semibold">Stateless</td>
+                <td>Allow AND Deny</td>
+                <td>A grumpy gate guard who checks you both ways</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">🚦 Security Group (Stateful)</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Sits right in front of your EC2 instance. <strong>Stateful</strong> means it remembers who it let in — if an allowed request enters, the reply automatically exits without needing a separate rule. Only "Allow" rules. Default: deny everything.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 text-sm">🚷 Network ACL (Stateless)</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Sits at the subnet boundary. <strong>Stateless</strong> means it checks every packet independently — both incoming AND outgoing need explicit Allow rules. Can actively Deny specific IPs. Acts as the outer perimeter defence.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-vpc -->
+
+
+    <!-- ══ TAB 8: IAM ══ -->
+    <div id="tab-iam" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔑</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Who Can Do What</h2>
+            <p class="text-slate-mid leading-relaxed">IAM is the service that controls every access decision in your AWS account. It is the single most important service for keeping your account safe. Think of it as the <strong>HR department + security team</strong> of your cloud — it issues keycards, defines what rooms each keycard opens, and revokes access when someone leaves.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- IAM Components -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🧩</span> IAM Components</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">👤</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Users</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">Individual people — a developer, an accountant. Each person gets their own username and password (and optionally, programmatic access keys). Credentials are unique to that person.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">👥</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Groups</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A collection of users who do the same job. Create a "Developers" group once, attach the right permissions, and every developer added to the group inherits them automatically — no need to set permissions one by one.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🎭</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Roles</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A <strong>temporary identity</strong> that a person or a server can "put on like a costume." For example, an EC2 server that needs to write files to S3 "assumes" the <code>S3-Writer</code> role to get permission for a limited time — no hard-coded keys needed.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📋</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Policies</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The actual written rules in JSON. A policy says: "You ARE allowed to view objects in S3, but you are NOT allowed to delete them." Policies are attached to users, groups, or roles.</p>
+          </div>
+        </div>
+
+        <!-- Policy snippet -->
+        <div class="pro-card rounded-2xl p-6 mb-6">
+          <h4 class="font-bold text-slate mb-3 text-sm">📄 Example IAM Policy — Read-Only S3</h4>
+          <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+            {<br>
+            &nbsp;&nbsp;"Effect": "<span class="text-amber">Allow</span>",<br>
+            &nbsp;&nbsp;"Action": ["s3:GetObject", "s3:ListBucket"],<br>
+            &nbsp;&nbsp;"Resource": "arn:aws:s3:::my-bucket/*"<br>
+            }<br><br>
+            <span class="text-slate-light">← No s3:DeleteObject = cannot delete</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Least Privilege -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚖️</span> The Principle of Least Privilege</h2>
+        <div class="rounded-2xl bg-slate p-6 text-white mb-5">
+          <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">The Most Important Security Rule in Cloud Computing</p>
+          <p class="text-slate-light leading-relaxed mb-4">Give every user and service the <strong class="text-white">minimum amount of permission</strong> they need to do their job — and nothing more. The janitor gets a key to the cleaning cupboard, not the server room. The website gets permission to read images from S3, not to delete the entire database.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="flex items-start gap-2">
+              <span class="text-red-400 mt-0.5 flex-shrink-0">✗</span>
+              <span class="text-slate-light">Don't give <code class="bg-white/10 text-white">AdministratorAccess</code> to every developer "for convenience"</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-green-400 mt-0.5 flex-shrink-0">✓</span>
+              <span class="text-slate-light">Create a <code class="bg-white/10 text-white">ReadOnlyDevelopers</code> group with just the services they need</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-red-400 mt-0.5 flex-shrink-0">✗</span>
+              <span class="text-slate-light">Never use your <code class="bg-white/10 text-white">root</code> account for day-to-day work</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-green-400 mt-0.5 flex-shrink-0">✓</span>
+              <span class="text-slate-light">Create individual IAM Users with MFA enabled from day one</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-iam -->
+
+
+    <!-- ══ TAB 9: CONSOLE & COSTS ══ -->
+    <div id="tab-console" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🎛️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Dashboard of a Very Advanced Car</h2>
+            <p class="text-slate-mid leading-relaxed">The AWS Management Console is the website you log into to manage all your cloud resources. It gives you visual access to every service in AWS — from a single screen. Learn to navigate it well and you have the entire global infrastructure of AWS at your fingertips.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Console navigation -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🖱️</span> Key Parts of the Console</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🔍</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Search Bar (Top Centre)</h4>
+            <p class="text-slate-mid text-sm">Type any service name ("EC2", "S3", "IAM") to navigate instantly. The fastest way to get anywhere.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🌍</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Region Selector (Top Right)</h4>
+            <p class="text-slate-mid text-sm">Always shows which city you're working in. If you can't find a resource you created, check here first — it's almost always a region mismatch.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">💳</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Account Menu (Top Right)</h4>
+            <p class="text-slate-mid text-sm">Billing, Cost Explorer, logout. This is where you see how much you've spent this month.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📊</p>
+            <h4 class="font-bold text-slate mb-1 text-sm">Home Widgets</h4>
+            <p class="text-slate-mid text-sm">Customisable dashboard cards showing recent services, cost summaries, and resource health at a glance.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing & Budgets -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">💰</span> Controlling Costs — Budgets & Alarms</h2>
+        <div class="analogy-card rounded-2xl p-5 mb-5">
+          <p class="text-slate-mid text-sm leading-relaxed">💳 <strong>Pay-as-you-go is great — until you accidentally leave a large server running for a month.</strong> AWS provides budget and alarm tools to make sure this never happens to you. Set these up on day one of your account.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">📊 AWS Budgets</h4>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">Set a monthly spending limit (e.g. $10/month). Configure alert thresholds to email you when you hit 50%, 80%, and 100% of your budget.</p>
+            <div class="bg-slate rounded-xl p-3 font-mono text-xs text-green-300">
+              Budget: $10/month<br>
+              Alert at: $5 (50%) ← email<br>
+              Alert at: $8 (80%) ← email<br>
+              Alert at: $10 (100%) ← email
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🚨 CloudWatch Billing Alarm</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">A real-time siren that triggers the moment your <em>predicted</em> bill exceeds a threshold. Faster than Budgets — reacts to spending spikes immediately rather than at month-end.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🆓 Free Tier</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">New AWS accounts get 12 months of free usage for core services. Always look for the "Free tier eligible" label when launching resources. <code>t2.micro</code> EC2 and 5GB S3 are free.</p>
+          </div>
+        </div>
+
+        <!-- Beginner safety rules -->
+        <div class="rounded-2xl bg-slate p-6 text-white mb-6">
+          <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">The Beginner's Safety Checklist</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span class="text-slate-light">Set up a <strong class="text-white">$1 budget alarm</strong> immediately on account creation</span></div>
+            <div class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span class="text-slate-light">Always use <strong class="text-white">Free Tier eligible</strong> options while learning</span></div>
+            <div class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span class="text-slate-light"><strong class="text-white">Stop or Terminate</strong> resources when you're finished with them</span></div>
+            <div class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span class="text-slate-light">Enable <strong class="text-white">MFA</strong> on your root account immediately</span></div>
+            <div class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span class="text-slate-light">Never use the <strong class="text-white">root account</strong> for day-to-day work</span></div>
+            <div class="flex items-start gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span class="text-slate-light">Check the <strong class="text-white">Region Selector</strong> before creating any resource</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conclusion dark panel -->
+      <div class="rounded-2xl bg-slate p-8 text-white">
+        <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Summary</p>
+        <h2 class="font-display font-bold text-2xl md:text-3xl mb-4">The Path to Cloud Proficiency</h2>
+        <p class="text-slate-light leading-relaxed mb-5">Cloud computing has made high-powered technology accessible to everyone. By mastering the five core pillars, you can build systems that are faster, safer, and cheaper than anything on-premise ever was.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 text-sm">
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Compute (EC2):</strong> The muscle that runs your code</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Storage (S3):</strong> The safe place that holds your files</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Database (RDS):</strong> The organised brain that stores your data</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Networking (VPC):</strong> The private fence that keeps your world secure</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Identity (IAM):</strong> The rules that decide who can enter</span></div>
+        </div>
+        <p class="text-slate-light text-sm leading-relaxed mb-6">Treat these services as a set of LEGO blocks — start small, keep your security tight, watch your budget, and the entire global infrastructure of AWS is yours to build with.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="AWS-S3.html"      class="px-4 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors">Next: Deep-dive AWS S3 →</a>
+          <a href="SagemakerAI.html" class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">Next: SageMaker AI →</a>
+          <a href="index.html"       class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← All Topics</a>
+        </div>
+      </div>
+
+    </div><!-- /tab-console -->
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span>Built with ❤️ by</span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+          Anwaar
+        </span>
+        <span>· No jargon, just clarity.</span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-5">
+      <a href="#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+
+  </div>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* Mobile menu */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* Reading progress */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('read-progress').style.width = (scrolled * 100) + '%';
+    document.getElementById('navbar').style.boxShadow =
+      doc.scrollTop > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* Tab switching */
+  function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    document.querySelectorAll('.toc-link').forEach(l => l.classList.toggle('active', l.dataset.tab === id));
+    if (id === 'cloud') setTimeout(renderCostChart, 150);
+  }
+
+  /* Cost Comparison Chart */
+  let costChartInstance = null;
+  function renderCostChart() {
+    const ctx = document.getElementById('costChart');
+    if (!ctx) return;
+    if (costChartInstance) costChartInstance.destroy();
+
+    const labels = ['Y1', 'Y2', 'Y3', 'Y4', 'Y5'];
+    costChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'On-Premise (CapEx + Maintenance)',
+            data: [420, 470, 520, 560, 610],
+            borderColor: '#6B7F91',
+            backgroundColor: 'rgba(107,127,145,0.10)',
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#6B7F91',
+            fill: true,
+            borderWidth: 2.5,
+          },
+          {
+            label: 'Cloud (OpEx — scales with usage)',
+            data: [80, 110, 160, 200, 240],
+            borderColor: '#FF9900',
+            backgroundColor: 'rgba(255,153,0,0.10)',
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#FF9900',
+            fill: true,
+            borderWidth: 2.5,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            backgroundColor: 'rgba(35,47,62,0.95)',
+            titleFont: { size: 13, family: 'DM Sans' },
+            bodyFont:  { size: 12, family: 'Roboto Mono' },
+            padding: 12,
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: $${ctx.raw}k cumulative`
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Year of Operation', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' }
+          },
+          y: {
+            title: { display: true, text: 'Cumulative Cost ($000s)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' },
+            suggestedMin: 0, suggestedMax: 700
+          }
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>
