@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+  @font-face {
+    font-family: 'MySignature';
+    src: url('signature.ttf');
+    font-display: swap;
+  }
+  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is AWS EC2? — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
+
+    /* Grain texture */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* Sticky nav */
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    /* Section tabs */
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      border-bottom: 3px solid #FF9900;
+      color: #232F3E;
+      font-weight: 700;
+    }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    /* Analogy card */
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    /* Pro card */
+    .pro-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    /* Info card */
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    /* Badge */
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Table */
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    /* Code inline */
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07);
+      color: #232F3E;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82em;
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    .delay-1 { animation-delay: 0.08s; }
+    .delay-2 { animation-delay: 0.16s; }
+    .delay-3 { animation-delay: 0.24s; }
+
+    /* Accent stripe */
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    /* Chart container */
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08);
+      border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    /* Mobile menu */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    /* Reading progress bar */
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    /* TOC sidebar */
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900;
+      border-left-color: #FF9900;
+      padding-left: 8px;
+    }
+
+    /* Step indicator */
+    .step-dot {
+      width: 2rem; height: 2rem; border-radius: 50%;
+      background: #232F3E; color: #fff;
+      font-weight: 700; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative antialiased">
+
+<!-- Reading progress bar -->
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO / ARTICLE HEADER ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">☁️ Cloud</span>
+      <span>›</span>
+      <span class="text-slate-mid">AWS EC2</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">AWS EC2?</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      Amazon's virtual computer rental service — explained from a curious beginner's first question all the way to how a professional architect designs elastic, fault-tolerant systems with it.
+    </p>
+
+    <!-- Meta row -->
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~22 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">🖥️ AWS · Cloud · Compute</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ QUICK OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🖥️</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Virtual Compute</p>
+      <p class="text-slate-light text-xs mt-1">Rent CPUs &amp; RAM on demand</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🔧</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Fully Configurable</p>
+      <p class="text-slate-light text-xs mt-1">OS, size, storage, network</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">⚡</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Launches in Minutes</p>
+      <p class="text-slate-light text-xs mt-1">From zero to running server</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">📈</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Auto Scales</p>
+      <p class="text-slate-light text-xs mt-1">Grows &amp; shrinks with demand</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- LEFT: TOC Sidebar (desktop) -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('foundations')" class="toc-link py-0.5 cursor-pointer" data-tab="foundations">① Foundations</a>
+        <a onclick="switchTab('instances')"   class="toc-link py-0.5 cursor-pointer" data-tab="instances">② Instance Types</a>
+        <a onclick="switchTab('storage')"     class="toc-link py-0.5 cursor-pointer" data-tab="storage">③ Storage</a>
+        <a onclick="switchTab('networking')"  class="toc-link py-0.5 cursor-pointer" data-tab="networking">④ Networking</a>
+        <a onclick="switchTab('scaling')"     class="toc-link py-0.5 cursor-pointer" data-tab="scaling">⑤ Scaling &amp; HA</a>
+        <a onclick="switchTab('launch')"      class="toc-link py-0.5 cursor-pointer" data-tab="launch">⑥ Launch &amp; Pricing</a>
+      </nav>
+      <a href="index.html" class="mt-8 flex items-center gap-2 text-xs text-slate-light hover:text-amber transition-colors font-semibold">
+        ← Back to Dashboard
+      </a>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Article content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Section Tabs (scrollable on mobile) -->
+    <div class="overflow-x-auto -mx-1 px-1 mb-8">
+      <div class="flex gap-1 bg-white rounded-2xl border border-slate/10 p-1.5 w-max min-w-full md:w-auto md:min-w-0 shadow-sm">
+        <button onclick="switchTab('foundations')" class="tab-btn active   px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="foundations">🏗️ Foundations</button>
+        <button onclick="switchTab('instances')"   class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="instances">🖥️ Instance Types</button>
+        <button onclick="switchTab('storage')"     class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="storage">💾 Storage</button>
+        <button onclick="switchTab('networking')"  class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="networking">🌐 Networking</button>
+        <button onclick="switchTab('scaling')"     class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="scaling">📈 Scaling &amp; HA</button>
+        <button onclick="switchTab('launch')"      class="tab-btn          px-4 py-2.5 rounded-xl text-sm text-slate-mid" data-tab="launch">🚀 Launch &amp; Pricing</button>
+      </div>
+    </div>
+
+    <!-- ── TAB 1: FOUNDATIONS ── -->
+    <div id="tab-foundations" class="tab-panel active">
+
+      <!-- Analogy intro -->
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🍳</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">EC2 is a Mega-Kitchen You Rent by the Minute</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">
+              Before cloud computing, a young boy named Leo wanted to start a restaurant. His first step was to buy a giant, expensive building and fill it with stoves, refrigerators, and heavy-duty sinks — all before serving a single meal. That enormous upfront investment is called <strong>Capital Expenditure (CapEx)</strong>. If business was slow on a Tuesday, those giant ovens still sat there consuming electricity, doing nothing.
+            </p>
+            <p class="text-slate-mid leading-relaxed">
+              With EC2, Leo simply logs into a website and says: <em>"I'd like to use one burner for exactly thirty minutes."</em> Amazon says: <em>"Certainly — that's two cents."</em> When Leo finishes, he stops paying. This shift from CapEx to <strong>Operating Expenditure (OpEx)</strong> is the entire reason cloud computing exists.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Traditional Problems -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl md:text-3xl text-slate mb-4 flex items-center gap-3">
+          <span class="text-3xl">⚠️</span> The 4 Problems of Traditional IT
+        </h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr>
+              <th>Traditional Problem</th><th>Cloud Solution</th><th>How EC2 Fixes It</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><strong>High Upfront Cost</strong></td><td>Pay-as-you-go</td><td>Pay only for the seconds you actually use compute</td></tr>
+              <tr><td><strong>Slow Setup (weeks)</strong></td><td>Near-instant launch</td><td>A running server in under 2 minutes from the console</td></tr>
+              <tr><td><strong>Wasteful Capacity</strong></td><td>Elasticity</td><td>Scale out to 1,000 instances; scale back to 1 automatically</td></tr>
+              <tr><td><strong>Maintenance Burden</strong></td><td>Managed Infrastructure</td><td>Amazon owns the physical hardware, cooling, and repairs</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- What EC2 Means -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl md:text-3xl text-slate mb-4 flex items-center gap-3">
+          <span class="text-3xl">🔤</span> Decoding the Name: E-C-2
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-6 text-center">
+            <p class="text-4xl mb-3">🔧</p>
+            <p class="tier-badge text-amber mb-1">E — Elastic</p>
+            <p class="font-display font-bold text-slate text-lg mb-1">Stretch & Shrink</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Like a rubber band — one computer today, a thousand tomorrow, and back to one next week.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6 text-center">
+            <p class="text-4xl mb-3">🧠</p>
+            <p class="tier-badge text-amber mb-1">C — Compute</p>
+            <p class="font-display font-bold text-slate text-lg mb-1">Brain Power</p>
+            <p class="text-slate-mid text-sm leading-relaxed">CPUs that do the thinking and RAM (short-term memory) that keeps the work fast.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6 text-center">
+            <p class="text-4xl mb-3">☁️</p>
+            <p class="tier-badge text-amber mb-1">C — Cloud</p>
+            <p class="font-display font-bold text-slate text-lg mb-1">Amazon's Data Centers</p>
+            <p class="text-slate-mid text-sm leading-relaxed">The physical machines live in Amazon's secure, global data centers — you access them over the internet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Virtualization -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl md:text-3xl text-slate mb-4 flex items-center gap-3">
+          <span class="text-3xl">🏢</span> Virtualization — The Apartment Building
+        </h2>
+        <div class="analogy-card rounded-2xl p-6 mb-5">
+          <p class="text-slate-mid leading-relaxed">Think of a large apartment building. The <strong>building</strong> is the physical server Amazon owns. Inside are many <strong>separate apartments</strong> — each with its own door, kitchen, and lock. The person in Apartment A cannot see inside Apartment B. These apartments are called <strong>Instances</strong> — your individual rented virtual computer. The building manager who ensures everyone gets a fair share of water and electricity is the <strong>Hypervisor</strong> — a special software layer that keeps every tenant isolated and secure.</p>
+        </div>
+
+        <!-- AMI -->
+        <h3 class="font-display font-semibold text-xl text-slate mb-3 flex items-center gap-2"><span>📋</span> AMI — The Digital Blueprint</h3>
+        <p class="text-slate-mid leading-relaxed mb-4">Before you can start a computer, you need to decide what's inside it. An <strong>Amazon Machine Image (AMI)</strong> is a pre-packaged set of instructions — like a "Save File" in a video game or a document template. It pre-loads your operating system, software, and configuration so you're not starting from scratch every time.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🔬 Data Science AMI</p>
+            <p class="text-slate-mid text-sm">Pre-loaded with Python, Jupyter, TensorFlow, and math libraries. Ready for scientists in seconds.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🌐 Web Server AMI</p>
+            <p class="text-slate-mid text-sm">Apache or Nginx pre-installed. Point your domain at it and your website is live.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🐧 Amazon Linux 2023</p>
+            <p class="text-slate-mid text-sm">AWS's own Linux, optimized for EC2. The recommended starting point for all beginners.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nitro System -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl md:text-3xl text-slate mb-4 flex items-center gap-3">
+          <span class="text-3xl">⚙️</span> The Nitro System — Amazon's Secret Engine
+        </h2>
+        <div class="analogy-card rounded-2xl p-6 mb-5">
+          <p class="text-slate-mid leading-relaxed">In the old days, the Hypervisor software had to do <em>everything</em> — cook the food, answer the phone, wash the dishes, and guard the door. This made the cooking slow. Amazon's <strong>Nitro System</strong> fixes this by installing specialized <strong>Nitro Cards</strong> — tiny dedicated chips that each handle one chore. One card handles networking. One handles storage. One handles security. The result? The CPU you rent can focus <strong>100% on your software</strong>, making instances dramatically faster and more secure.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-foundations -->
+
+    <!-- ── TAB 2: INSTANCE TYPES ── -->
+    <div id="tab-instances" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🚗</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Choosing the Right Vehicle</h2>
+            <p class="text-slate-mid leading-relaxed">Not every task needs the same power. You wouldn't drive a monster truck to pick up groceries, or try to move a house in a Mini Cooper. EC2 Instance Types are the different "vehicles" in Amazon's fleet — each built for a different job.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instance Family Table -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🏷️</span> Instance Families</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr>
+              <th>Family</th><th>Analogy</th><th>Best Use Case</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><strong>General Purpose (T, M)</strong></td><td>🚗 The Family Car — good at everything</td><td>Small websites, learning, simple apps</td></tr>
+              <tr><td><strong>Compute Optimized (C)</strong></td><td>🏎️ The Sports Car — very fast CPU, less storage</td><td>High-speed math, video processing, online gaming</td></tr>
+              <tr><td><strong>Memory Optimized (R, X)</strong></td><td>🚛 The Moving Truck — massive RAM capacity</td><td>Giant databases that hold millions of records in memory</td></tr>
+              <tr><td><strong>Accelerated Computing (P, G)</strong></td><td>🔭 The Specialist Tool — built for one job</td><td>AI/ML training, 3D graphics rendering, deep learning</td></tr>
+              <tr><td><strong>Storage Optimized (I, D)</strong></td><td>🏭 The Warehouse — built for fast disk I/O</td><td>High-speed record-keeping for banks or streaming</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Burstable instances -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">💥</span> Burstable Instances — The Stamina Runner</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">The <strong>T family</strong> (t2.micro, t3.small) is special — these are called <em>burstable</em> instances. Think of a runner who earns stamina credits while walking and spends them on sprints.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-3xl mb-2">🚶</p>
+            <p class="font-bold text-slate text-sm">Baseline Performance</p>
+            <p class="text-slate-light text-xs mt-1">The runner's normal walking speed. Steady, predictable.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-3xl mb-2">🏃</p>
+            <p class="font-bold text-slate text-sm">Burst Mode</p>
+            <p class="text-slate-light text-xs mt-1">Full sprint when needed. Spends accumulated CPU credits.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-3xl mb-2">⭐</p>
+            <p class="font-bold text-slate text-sm">Unlimited Mode</p>
+            <p class="text-slate-light text-xs mt-1">Keep sprinting even with no credits — at a small extra cost.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Placement Groups -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📍</span> Placement Groups — Choosing Your Neighbours</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">The physical location of your virtual computer inside Amazon's data center can matter enormously for performance and reliability. Placement Groups let you control this.</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm">
+          <table class="oc-table">
+            <thead><tr><th>Strategy</th><th>Analogy</th><th>Why Use It?</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Cluster</strong></td><td>Everyone in the same room</td><td>Instances need to talk to each other at ultra-low latency (e.g., HPC, big data)</td></tr>
+              <tr><td><strong>Spread</strong></td><td>Everyone in a different building</td><td>Maximum resilience — if one host fails, only one instance is affected</td></tr>
+              <tr><td><strong>Partition</strong></td><td>Groups in different neighbourhoods</td><td>Giant distributed systems (Hadoop, Kafka) — balances speed and safety</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chart: Instance types vs use cases -->
+      <div class="bg-white rounded-2xl border border-slate/10 shadow-sm p-6 md:p-8 mb-6">
+        <h3 class="font-display font-semibold text-xl text-slate mb-2 text-center">CPU vs. RAM Balance by Instance Family</h3>
+        <p class="text-slate-light text-sm text-center mb-6">Each family is optimized for a different ratio of compute power to memory.</p>
+        <div class="chart-container">
+          <canvas id="instanceChart"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /tab-instances -->
+
+    <!-- ── TAB 3: STORAGE ── -->
+    <div id="tab-storage" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🎒</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Two Types of Storage: Backpack vs. Table</h2>
+            <p class="text-slate-mid leading-relaxed">EC2 gives you two primary ways to store data. The <strong>EBS Backpack</strong> keeps your files safe and detachable — attach it to any computer, and your data travels with it. The <strong>Instance Store Table</strong> is lightning-fast but wiped clean the moment you leave the room.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EBS -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">💾</span> EBS — The Detachable Backpack</h2>
+        <p class="text-slate-mid leading-relaxed mb-5"><strong>Elastic Block Store (EBS)</strong> is the most common storage for EC2. It is a persistent digital hard drive that keeps your data even when the instance is turned off. You can detach it from one instance and attach it to another — all your files come along for the ride.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">⚡</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Best All-Around</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">gp3 — General Purpose SSD</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The High-Quality School Bag</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Fast, reliable, and the cheapest way to get great performance. The recommended default for most workloads. Up to 16,000 IOPS and 1,000 MB/s throughput.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">🏆</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Pro Tier</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">io2 — Provisioned IOPS SSD</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Professional Survival Pack</p>
+            <p class="text-slate-mid text-sm leading-relaxed">For ultra-high-speed work: saving and opening files thousands of times per second. Used by critical databases (Oracle, SAP). Up to 256,000 IOPS.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">🧳</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">High Throughput</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">st1 — Throughput Optimized HDD</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Large Suitcase with Wheels</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Great for moving giant sequential files (raw video, log data) — not for random reads. Think of a big suitcase: perfect for bulk cargo, not quick access.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">📦</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Lowest Cost</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">sc1 — Cold HDD</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Attic Storage Box</p>
+            <p class="text-slate-mid text-sm leading-relaxed">The cheapest EBS option. For files you almost never access — compliance archives, historical backups. Slow retrieval, but pennies per GB.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Instance Store -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🍽️</span> Instance Store — The Built-in Table</h2>
+        <div class="analogy-card rounded-2xl p-6 mb-5">
+          <p class="text-slate-mid leading-relaxed">Instance Store is storage physically built into the server hardware. Think of it as a kitchen table — extremely fast to reach across and grab a knife. But the moment you <strong>stop or terminate</strong> the instance (leave the kitchen), the table is <em>wiped completely clean</em>. Anything left on the table is gone forever. This is why Instance Store is called <strong>ephemeral</strong> — temporary by nature.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">✅ When to Use Instance Store</p>
+            <ul class="space-y-1 text-slate-mid text-sm mt-2">
+              <li class="flex items-start gap-2"><span class="text-amber">→</span> Temporary caches and buffers</li>
+              <li class="flex items-start gap-2"><span class="text-amber">→</span> Scratch space for big data processing</li>
+              <li class="flex items-start gap-2"><span class="text-amber">→</span> When raw I/O speed matters more than persistence</li>
+            </ul>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">❌ Never Use Instance Store For</p>
+            <ul class="space-y-1 text-slate-mid text-sm mt-2">
+              <li class="flex items-start gap-2"><span class="text-amber">→</span> Customer data or databases</li>
+              <li class="flex items-start gap-2"><span class="text-amber">→</span> Any file you cannot afford to lose</li>
+              <li class="flex items-start gap-2"><span class="text-amber">→</span> Application state that must survive reboots</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lifecycle states -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔄</span> Instance Lifecycle States</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Understanding instance states is critical for controlling costs. You pay differently depending on the state.</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm">
+          <table class="oc-table">
+            <thead><tr><th>State</th><th>What's Happening</th><th>Paying for Compute?</th><th>EBS Charges?</th></tr></thead>
+            <tbody>
+              <tr><td><code>Pending</code></td><td>Instance starting up</td><td>No</td><td>No</td></tr>
+              <tr><td><code>Running</code></td><td>Instance is on and active</td><td>✅ Yes</td><td>✅ Yes</td></tr>
+              <tr><td><code>Stopped</code></td><td>Instance is off — files preserved</td><td>No</td><td>✅ Yes</td></tr>
+              <tr><td><code>Hibernated</code></td><td>Sleep mode — RAM saved to disk</td><td>No</td><td>✅ Yes</td></tr>
+              <tr><td><code>Terminated</code></td><td>Deleted forever — cannot be recovered</td><td>No</td><td>No (usually deleted)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tab-storage -->
+
+    <!-- ── TAB 4: NETWORKING & SECURITY ── -->
+    <div id="tab-networking" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏘️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Your Gated Community in the Cloud</h2>
+            <p class="text-slate-mid leading-relaxed">AWS is a giant city. A <strong>VPC (Virtual Private Cloud)</strong> is a piece of land you bought and fenced off. Inside your fence you decide where the houses (instances) go and who has a key to the gate. Security Groups are the bouncers at the door of each house.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VPC & Subnets -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🌐</span> VPC &amp; Subnets</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="text-3xl mb-3">🌞</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Public Subnet</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Front Yard</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Connected to the main road — the internet can reach it. This is where your web servers live so people can visit your website.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="text-3xl mb-3">🔒</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Private Subnet</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Inside of the House</p>
+            <p class="text-slate-mid text-sm leading-relaxed">No doors to the outside world. Only resources already inside your VPC fence can access it. Perfect for databases and secret files.</p>
+          </div>
+        </div>
+
+        <!-- Gateways -->
+        <h3 class="font-display font-semibold text-xl text-slate mb-4">Gateways &amp; IP Addresses</h3>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Component</th><th>Analogy</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Internet Gateway (IGW)</strong></td><td>The main community gate</td><td>Connects your VPC to the real internet. Without it, instances are offline.</td></tr>
+              <tr><td><strong>NAT Gateway</strong></td><td>A one-way security door</td><td>Lets private instances download updates, but prevents internet traffic from entering.</td></tr>
+              <tr><td><strong>Private IP</strong></td><td>Your internal house number</td><td>Used only inside the VPC. Never visible to the outside world.</td></tr>
+              <tr><td><strong>Public IP</strong></td><td>Your street address</td><td>What people on the internet use to find you. Changes if you stop and restart the instance.</td></tr>
+              <tr><td><strong>Elastic IP</strong></td><td>A permanent phone number</td><td>A fixed public IP that never changes — stays even if you get a new instance.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Security -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔐</span> Security: Three Layers of Protection</h2>
+
+        <!-- Key Pairs -->
+        <div class="pro-card rounded-2xl p-6 mb-5">
+          <h3 class="font-bold text-slate mb-3 flex items-center gap-2 text-lg">🗝️ Key Pairs — The Magic Keys</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-3">When you launch an EC2 instance, you don't create a password. You create a <strong>Key Pair</strong>. Amazon keeps the <strong>Public Key</strong> (the lock on the door). You download the <strong>Private Key</strong> — the only physical key in the world that can open that lock. You then use <strong>SSH (Secure Shell)</strong> — a secure encrypted language — to communicate with your Linux instance.</p>
+          <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-relaxed">
+            ssh -i "my-key.pem" ec2-user@your-instance-ip
+          </div>
+        </div>
+
+        <!-- Security Groups -->
+        <div class="pro-card rounded-2xl p-6 mb-5">
+          <h3 class="font-bold text-slate mb-3 flex items-center gap-2 text-lg">🚪 Security Groups — The Bouncer</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-3">A Security Group is a virtual firewall — a bouncer at the door of your instance with a strict guest list. You tell the bouncer: <em>"Only let messages in through Port 80 (website traffic)."</em> Anyone trying to sneak in through Port 22 (SSH) is stopped unless they're on the list.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            <div class="bg-white rounded-xl p-4 border border-slate/10">
+              <p class="font-bold text-slate text-sm mb-2">Common Inbound Rules</p>
+              <ul class="space-y-1 text-slate-mid text-xs">
+                <li>Port 22 — SSH (Your Private Key only)</li>
+                <li>Port 80 — HTTP (Public website)</li>
+                <li>Port 443 — HTTPS (Secure website)</li>
+                <li>Port 3306 — MySQL (Specific IPs only)</li>
+              </ul>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-slate/10">
+              <p class="font-bold text-slate text-sm mb-2">Key Rules</p>
+              <ul class="space-y-1 text-slate-mid text-xs">
+                <li>Stateful — return traffic is auto-allowed</li>
+                <li>Default: deny all inbound, allow all outbound</li>
+                <li>Changes take effect immediately</li>
+                <li>Multiple groups can be attached to one instance</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- IAM Roles -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-bold text-slate mb-3 flex items-center gap-2 text-lg">🪪 IAM Roles — The ID Badge</h3>
+          <p class="text-slate-mid text-sm leading-relaxed">Sometimes your EC2 instance needs to talk to other AWS services (like S3 storage). Instead of giving it a username and password (which could be stolen), you give it an <strong>IAM Role</strong> — a digital ID badge. It's like giving a delivery driver a badge that only opens the garage door. They can drop off packages, but they can't go into the kitchen or bedroom.</p>
+        </div>
+      </div>
+
+    </div><!-- /tab-networking -->
+
+    <!-- ── TAB 5: SCALING & HA ── -->
+    <div id="tab-scaling" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🍽️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">A Restaurant That Never Runs Out of Chefs</h2>
+            <p class="text-slate-mid leading-relaxed">In a traditional system, if your one server broke, everything stopped. EC2 uses two powerful tools — an <strong>Elastic Load Balancer</strong> (the Head Waiter) and an <strong>Auto Scaling Group</strong> (a Magic Spell) — to ensure your application never goes down, no matter how many visitors arrive.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ELB -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚖️</span> Elastic Load Balancing (ELB)</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">If you have multiple instances running your application, you need a way to split the incoming traffic fairly. The <strong>Elastic Load Balancer</strong> is the Head Waiter who greets every customer and directs them to whichever chef (instance) is least busy — and skips any chef who is sick (unhealthy instance).</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="text-3xl mb-3">🧠</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Application LB (ALB)</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Intelligent Waiter</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Reads the customer's order (HTTP content). Routes <code>/api</code> requests to the API server and <code>/images</code> to the image server. Layer 7 routing.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="text-3xl mb-3">⚡</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Network LB (NLB)</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Ultra-Fast Waiter</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Doesn't read orders — just moves people to open tables at lightning speed. Handles millions of requests per second with ultra-low latency.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <p class="text-3xl mb-3">🛡️</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Gateway LB (GLB)</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Security Waiter</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Makes every customer walk through a metal detector (firewall appliance) before entering. Integrates third-party security tools transparently.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASG -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">✨</span> Auto Scaling Groups (ASG) — The Magic Spell</h2>
+        <div class="analogy-card rounded-2xl p-6 mb-5">
+          <p class="text-slate-mid leading-relaxed">An ASG is like a magic spell on your kitchen. You set three numbers: <strong>Minimum</strong> (the fewest chefs you'll ever have), <strong>Maximum</strong> (the most you're willing to pay for), and <strong>Desired</strong> (how many you want right now). The spell watches the kitchen. If the one chef gets overwhelmed (high CPU usage), it instantly spawns new chefs. When the rush is over, it sends the extra chefs home — and you stop paying.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-3xl mb-2">📉</p>
+            <p class="font-bold text-slate text-sm">Minimum Size</p>
+            <p class="text-slate-light text-xs mt-1">Floor — always at least this many instances running</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-3xl mb-2">🎯</p>
+            <p class="font-bold text-slate text-sm">Desired Capacity</p>
+            <p class="text-slate-light text-xs mt-1">Current target — ASG maintains this count normally</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-3xl mb-2">📈</p>
+            <p class="font-bold text-slate text-sm">Maximum Size</p>
+            <p class="text-slate-light text-xs mt-1">Ceiling — never pay for more than this many instances</p>
+          </div>
+        </div>
+
+        <!-- Scaling Policies -->
+        <h3 class="font-display font-semibold text-xl text-slate mb-4">Scaling Triggers</h3>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm">
+          <table class="oc-table">
+            <thead><tr><th>Policy Type</th><th>How It Works</th><th>Best For</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Target Tracking</strong></td><td>Keep CPU at exactly 60% — add/remove to maintain the target</td><td>Most workloads. Simplest to set up.</td></tr>
+              <tr><td><strong>Step Scaling</strong></td><td>CPU 60–80% → add 1 instance. CPU &gt;80% → add 3 at once</td><td>Workloads with big sudden spikes</td></tr>
+              <tr><td><strong>Scheduled Scaling</strong></td><td>"Every Monday morning at 9am, add 5 instances"</td><td>Predictable traffic (business hours, sale events)</td></tr>
+              <tr><td><strong>Predictive Scaling</strong></td><td>ML analyzes historical patterns and pre-scales before the rush</td><td>Regular, recurring traffic patterns</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tab-scaling -->
+
+    <!-- ── TAB 6: LAUNCH & PRICING ── -->
+    <div id="tab-launch" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🚀</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">How to Launch Your First Instance (Step by Step)</h2>
+            <p class="text-slate-mid leading-relaxed">Launching an EC2 instance takes about 90 seconds and 7 steps. Here's what each screen means — and how to pick smart options as a beginner.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Launch steps -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-6 flex items-center gap-3"><span class="text-2xl">🖱️</span> The Launch Instance Wizard</h2>
+
+        <div class="space-y-4">
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">1</div>
+            <div>
+              <p class="font-bold text-slate">Name &amp; Tags</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">Give your instance a clear name like <code>Leo-Website-Server</code>. Add tags (labels) to organize and track costs — e.g., <code>Project: MyBlog</code>, <code>Environment: Production</code>.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">2</div>
+            <div>
+              <p class="font-bold text-slate">Choose an AMI (Blueprint)</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">For beginners, select <strong>Amazon Linux 2023</strong> — the most modern and easy-to-use option. Always check for the <span class="text-green-600 font-semibold">Free Tier Eligible</span> badge to avoid charges while learning.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">3</div>
+            <div>
+              <p class="font-bold text-slate">Instance Type (Muscle)</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">Choose <strong>t2.micro</strong> or <strong>t3.micro</strong> for your first time — these are small, free for 750 hours/month for your first year, and perfect for learning.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">4</div>
+            <div>
+              <p class="font-bold text-slate">Key Pair (Your Private Key)</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">Click <strong>"Create new key pair"</strong>, give it a name, and download the <code>.pem</code> file. Treat this like a real house key — keep it safe on your laptop. If you lose it, you'll need to replace the instance.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">5</div>
+            <div>
+              <p class="font-bold text-slate">Network Settings (Security Groups)</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">Check <strong>Allow SSH traffic</strong> so you can connect to your machine. Check <strong>Allow HTTP traffic</strong> if you're building a website so visitors can reach it.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">6</div>
+            <div>
+              <p class="font-bold text-slate">Configure Storage</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">The default <strong>8 GiB gp3</strong> is perfect for beginners. The <code>gp3</code> type is the newest and fastest standard storage — there's no reason to pick anything else for your first instance.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate/10 p-5 flex gap-4">
+            <div class="step-dot">7</div>
+            <div>
+              <p class="font-bold text-slate">Advanced Details (The Secret Sauce)</p>
+              <p class="text-slate-mid text-sm mt-1 leading-relaxed">
+                <strong>IAM Instance Profile</strong> — attach a Role to give your computer an ID badge.<br>
+                <strong>Termination Protection</strong> — turn ON to prevent accidental deletion (safety lock).<br>
+                <strong>User Data</strong> — paste a startup script here and the instance runs it automatically on first boot. It's like leaving a to-do list on the counter for a new chef.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Pricing Models -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">💰</span> Pricing Models — Choosing How to Pay</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">🚕</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Most Flexible</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">On-Demand</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Taxi Meter</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Pay by the second for exactly what you use. No commitment. No upfront payment. The most expensive rate — but perfect for unpredictable workloads or testing.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">🏠</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">Up to 72% off</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Reserved / Savings Plans</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Long-Term Lease</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Commit to 1 or 3 years and get a massive discount — up to 72% cheaper than On-Demand. Like signing a long-term apartment lease instead of staying in a hotel every night.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">✈️</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Up to 90% off</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Spot Instances</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Standby Flight Ticket</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Amazon's spare capacity sold at 90% discount. The catch: Amazon can reclaim them with just a <strong>2-minute warning</strong>. Perfect for batch jobs, rendering, and fault-tolerant workloads — never for critical databases.</p>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-2xl">🏛️</span>
+              <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Compliance Grade</span>
+            </div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Dedicated Hosts</h3>
+            <p class="text-slate-light text-xs uppercase tracking-wider mb-2">The Private Building</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Rent an entire physical server — no other customer's workloads share your hardware. Very expensive, typically used by companies with strict regulatory or licensing requirements.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CloudWatch monitoring -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📊</span> Monitoring with CloudWatch</h2>
+        <div class="analogy-card rounded-2xl p-6 mb-5">
+          <p class="text-slate-mid leading-relaxed">CloudWatch is the <strong>dashboard of your car</strong> — it shows you speed, fuel, and engine temperature at a glance. For EC2, it tracks metrics like CPU Utilization, Network In/Out, and Disk Read/Write. You can set <strong>Alarms</strong>: "If my CPU stays above 80% for more than 5 minutes, send me an email and launch a second instance automatically." This is how you build a self-managing system.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🧠</p>
+            <p class="font-bold text-slate text-sm">CPU Utilization</p>
+            <p class="text-slate-light text-xs mt-1">Is the computer working too hard?</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">🌐</p>
+            <p class="font-bold text-slate text-sm">Network In/Out</p>
+            <p class="text-slate-light text-xs mt-1">How much traffic is visiting your site?</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <p class="text-2xl mb-2">💾</p>
+            <p class="font-bold text-slate text-sm">Disk Read/Write</p>
+            <p class="text-slate-light text-xs mt-1">Is the instance saving a lot of files?</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-launch -->
+
+  </main>
+</div><!-- /main content -->
+
+<!-- ═══════════════════ CONCLUSION BANNER ═══════════════════ -->
+<section class="py-16 px-5 bg-slate">
+  <div class="max-w-4xl mx-auto text-center">
+    <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-2">Key Takeaway</p>
+    <h2 class="font-display font-bold text-3xl md:text-4xl text-white mb-5">EC2: The Engine of the Cloud</h2>
+    <p class="font-body text-slate-light text-base md:text-lg max-w-2xl mx-auto mb-8">
+      What once required a million-dollar data center can now be done by a student with a laptop. An <strong class="text-white">Instance</strong> is just a virtual room in a giant building. An <strong class="text-white">AMI</strong> is a recipe for success. <strong class="text-white">Auto Scaling</strong> is a magic spell for growth. The cloud is not just for experts — it is a digital playground where the only limit is your creativity.
+    </p>
+    <a href="index.html#topics" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors duration-200">
+      Explore More Topics →
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark border-t border-slate/10">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span>Built with ❤️ by</span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+          Anwaar
+        </span>
+        <span>· No jargon, just clarity.</span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-5">
+      <a href="index.html#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+
+  </div>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* ── Mobile menu ── */
+  function toggleMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('mobile-menu').classList.remove('open');
+  }
+
+  /* ── Tab switching ── */
+  function switchTab(id) {
+    // Panels
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+
+    // Tab buttons
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn[data-tab="' + id + '"]').forEach(b => b.classList.add('active'));
+
+    // TOC links
+    document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.toc-link[data-tab="' + id + '"]').forEach(l => l.classList.add('active'));
+
+    // Draw chart if needed
+    if (id === 'instances') drawInstanceChart();
+  }
+
+  /* ── Sticky nav shadow ── */
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    nav.style.boxShadow = window.scrollY > 10
+      ? '0 4px 24px rgba(35,47,62,0.10)'
+      : 'none';
+  });
+
+  /* ── Reading progress bar ── */
+  window.addEventListener('scroll', () => {
+    const el = document.getElementById('read-progress');
+    const doc = document.documentElement;
+    const scrollTop = doc.scrollTop || document.body.scrollTop;
+    const scrollHeight = doc.scrollHeight - doc.clientHeight;
+    const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    el.style.width = pct + '%';
+  });
+
+  /* ── Chart: CPU vs RAM balance ── */
+  let instanceChartDrawn = false;
+  function drawInstanceChart() {
+    if (instanceChartDrawn) return;
+    instanceChartDrawn = true;
+
+    const ctx = document.getElementById('instanceChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['General Purpose\n(T, M)', 'Compute Optimized\n(C)', 'Memory Optimized\n(R, X)', 'Accelerated\n(P, G)', 'Storage Optimized\n(I, D)'],
+        datasets: [
+          {
+            label: 'CPU Focus (relative)',
+            data: [5, 9, 4, 7, 5],
+            backgroundColor: 'rgba(255,153,0,0.8)',
+            borderRadius: 6,
+          },
+          {
+            label: 'RAM Focus (relative)',
+            data: [5, 3, 9, 6, 5],
+            backgroundColor: 'rgba(35,47,62,0.7)',
+            borderRadius: 6,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { font: { family: 'DM Sans', size: 12 } } },
+          tooltip: { callbacks: { title: (items) => items[0].label.replace('\n', ' ') } }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: 'DM Sans', size: 11 }, maxRotation: 0 }
+          },
+          y: {
+            beginAtZero: true,
+            max: 10,
+            grid: { color: 'rgba(35,47,62,0.06)' },
+            ticks: {
+              font: { family: 'DM Sans', size: 11 },
+              callback: (v) => v === 10 ? 'Max' : v === 5 ? 'Balanced' : v
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>
