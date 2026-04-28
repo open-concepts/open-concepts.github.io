@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    @font-face {
+      font-family: 'MySignature';
+      src: url('signature.ttf');
+      font-display: swap;
+    }
+  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linux & Bash — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    #navbar {
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    .tab-btn {
+      transition: all 0.2s ease; border-bottom: 3px solid transparent;
+      cursor: pointer; white-space: nowrap;
+    }
+    .tab-btn.active { border-bottom: 3px solid #FF9900; color: #232F3E; font-weight: 700; }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    .pro-card {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07); color: #232F3E;
+      padding: 2px 6px; border-radius: 4px; font-size: 0.82em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up  { animation: fadeUp 0.5s ease both; }
+    .delay-1  { animation-delay: 0.08s; }
+    .delay-2  { animation-delay: 0.16s; }
+    .delay-3  { animation-delay: 0.24s; }
+
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08); border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900; border-left-color: #FF9900; padding-left: 8px;
+    }
+
+    /* terminal chrome */
+    .terminal-window {
+      background: #1a1f2e; border-radius: 0.875rem; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    .terminal-bar {
+      background: #2d3346; padding: 10px 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-body {
+      padding: 18px 20px; font-family: 'Roboto Mono', monospace;
+      font-size: 0.78rem; line-height: 1.75; color: #a8d8a8;
+    }
+    .terminal-body .cmd  { color: #FFB84D; }
+    .terminal-body .flag { color: #79c8e6; }
+    .terminal-body .arg  { color: #e8c07d; }
+    .terminal-body .cmt  { color: #5c7a6b; font-style: italic; }
+    .terminal-body .ok   { color: #6fcf97; }
+    .terminal-body .warn { color: #f2c94c; }
+    .terminal-body .path { color: #c084fc; }
+    .terminal-body .perm { color: #f87171; }
+
+    /* filesystem tree node */
+    .fs-node {
+      transition: background 0.15s, border-color 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .fs-node:hover {
+      background: #FFF3DC;
+      border-left-color: #FF9900;
+    }
+
+    /* permission bit */
+    .pbit-r  { color: #16a34a; font-weight: 700; }
+    .pbit-w  { color: #dc2626; font-weight: 700; }
+    .pbit-x  { color: #2563eb; font-weight: 700; }
+    .pbit-no { color: #9ca3af; }
+
+    /* pipe animation */
+    .pipe-segment {
+      transition: opacity 0.3s; opacity: 0.85;
+    }
+    .pipe-segment:hover { opacity: 1; }
+
+    /* boot step */
+    .boot-step {
+      border-left: 3px solid #FF9900;
+      transition: background 0.2s;
+    }
+    .boot-step:hover { background: #FFF3DC; }
+  </style>
+</head>
+<body class="min-h-screen relative antialiased">
+
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">🐧 Linux</span>
+      <span>›</span>
+      <span class="text-slate-mid">Linux & Bash</span>
+    </div>
+
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">Linux & Bash?</span>
+    </h1>
+
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      From the locked recipe books of proprietary systems to the open kitchens of the modern world — a complete guide to the operating system powering 90% of the internet, and the command language that controls it.
+    </p>
+
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~24 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">🐧 Linux · Bash · DevOps</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🐧</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Born 1991</p>
+      <p class="text-slate-light text-xs mt-1">Created by Linus Torvalds</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🔓</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Open Source</p>
+      <p class="text-slate-light text-xs mt-1">The recipe is free for everyone</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🌍</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">90% of Servers</p>
+      <p class="text-slate-light text-xs mt-1">Powers the modern internet</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">⌨️</div>
+      <p class="font-display font-bold text-slate text-base leading-tight">Bash Shell</p>
+      <p class="text-slate-light text-xs mt-1">Human-to-kernel translator</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- TOC Sidebar -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('history')"     class="toc-link py-0.5 cursor-pointer active" data-tab="history">① History & Origins</a>
+        <a onclick="switchTab('architecture')" class="toc-link py-0.5 cursor-pointer" data-tab="architecture">② Kernel & Shell</a>
+        <a onclick="switchTab('filesystem')"  class="toc-link py-0.5 cursor-pointer" data-tab="filesystem">③ File System Tree</a>
+        <a onclick="switchTab('navigation')"  class="toc-link py-0.5 cursor-pointer" data-tab="navigation">④ Navigation Commands</a>
+        <a onclick="switchTab('actions')"     class="toc-link py-0.5 cursor-pointer" data-tab="actions">⑤ Action Commands</a>
+        <a onclick="switchTab('reading')"     class="toc-link py-0.5 cursor-pointer" data-tab="reading">⑥ Reading & Searching</a>
+        <a onclick="switchTab('permissions')" class="toc-link py-0.5 cursor-pointer" data-tab="permissions">⑦ Permissions</a>
+        <a onclick="switchTab('pipes')"       class="toc-link py-0.5 cursor-pointer" data-tab="pipes">⑧ Pipes & Redirection</a>
+        <a onclick="switchTab('packages')"    class="toc-link py-0.5 cursor-pointer" data-tab="packages">⑨ Packages & Editors</a>
+        <a onclick="switchTab('boot')"        class="toc-link py-0.5 cursor-pointer" data-tab="boot">⑩ Boot Process</a>
+      </nav>
+      <a href="index.html" class="mt-8 flex items-center gap-2 text-xs text-slate-light hover:text-amber transition-colors font-semibold">← Back to Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- Article -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Tabs -->
+    <div class="overflow-x-auto -mx-1 px-1 mb-8">
+      <div class="flex gap-1 bg-white rounded-2xl border border-slate/10 p-1.5 w-max shadow-sm">
+        <button onclick="switchTab('history')"      class="tab-btn active  px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="history">📜 History</button>
+        <button onclick="switchTab('architecture')" class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="architecture">🧅 Architecture</button>
+        <button onclick="switchTab('filesystem')"   class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="filesystem">🌳 File System</button>
+        <button onclick="switchTab('navigation')"   class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="navigation">🧭 Navigation</button>
+        <button onclick="switchTab('actions')"      class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="actions">✂️ Actions</button>
+        <button onclick="switchTab('reading')"      class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="reading">🔍 Read & Search</button>
+        <button onclick="switchTab('permissions')"  class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="permissions">🔐 Permissions</button>
+        <button onclick="switchTab('pipes')"        class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="pipes">🔗 Pipes</button>
+        <button onclick="switchTab('packages')"     class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="packages">📦 Packages</button>
+        <button onclick="switchTab('boot')"         class="tab-btn         px-3 py-2.5 rounded-xl text-xs text-slate-mid" data-tab="boot">⚡ Boot Process</button>
+      </div>
+    </div>
+
+
+    <!-- ══ TAB 1: HISTORY ══ -->
+    <div id="tab-history" class="tab-panel active">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">📜</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Age of Locked Recipe Books</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">Before Linux, computing was like a restaurant where the recipe was kept in a locked safe. You were allowed to eat the food, but forbidden from seeing how it was cooked or changing the ingredients. Early computers in the 1940s and 1950s had no operating system at all — programs were loaded one at a time using physical switches. Then came "batch processing" — a community kitchen that allowed only one person inside at a time, and if a tool broke, the user had to fix it themselves.</p>
+            <p class="text-slate-mid leading-relaxed">In 1991, a Finnish student named <strong>Linus Torvalds</strong> created a free, open alternative — the Linux kernel. He opened the recipe book for everyone.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problems with proprietary systems -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔒</span> Three Problems With Proprietary Systems</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="text-3xl mb-3">📖</div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-2">Locked Recipes</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">The source code was kept secret. Users could not fix bugs or add features — they had to wait for the company to decide to make changes. The kitchen's instructions were hidden in a locked safe.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="text-3xl mb-3">💸</div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-2">High Costs</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Systems were extremely expensive and inaccessible to regular people. In 1989, a portable computer from a major company cost as much as a luxury kitchen installation — out of reach for most of the world.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="text-3xl mb-3">🍞</div>
+            <h3 class="font-display font-semibold text-lg text-slate mb-2">Lack of Portability</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">A program written for one brand of computer would not run on another. Like a toaster that only works with one specific brand of bread — you were permanently locked into one manufacturer's ecosystem.</p>
+          </div>
+        </div>
+
+        <!-- What open source gave us chart -->
+        <div class="bg-white rounded-2xl border border-slate/10 shadow-sm p-6 md:p-8">
+          <h3 class="font-display font-semibold text-xl text-slate mb-2 text-center">Proprietary vs. Open Source — A Comparison</h3>
+          <p class="text-slate-light text-sm text-center mb-6">Linux changed every dimension of the equation when it opened the recipe book in 1991.</p>
+          <div class="chart-container">
+            <canvas id="openSourceChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-history -->
+
+
+    <!-- ══ TAB 2: ARCHITECTURE ══ -->
+    <div id="tab-architecture" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🧅</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Walnut Analogy</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">An operating system is like a walnut. At the very center is the <strong>kernel</strong> — the seed inside the hard shell. Surrounding the kernel is the <strong>shell</strong> — the tough outer layer. The shell translates your words into instructions the seed understands. You, the user, are outside holding the whole walnut, talking to the shell.</p>
+            <p class="text-slate-mid leading-relaxed">The kernel never speaks directly to you. It speaks to the hardware. Bash is the shell — the translator that converts plain English commands into the electrical signals the kernel understands.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Component table -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🍳</span> The Kitchen Analogy: Full Component Map</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-8">
+          <table class="oc-table">
+            <thead><tr><th>Component</th><th>Kitchen Analogy</th><th>Technical Function</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Hardware</strong></td><td>The Physical Kitchen (Stove, Sink, Fridge)</td><td>The electronic circuits and physical parts of the computer</td></tr>
+              <tr><td><strong>Kernel</strong></td><td>The Master Chef</td><td>Core software that manages all hardware resources directly</td></tr>
+              <tr><td><strong>Shell (Bash)</strong></td><td>The Waiter / Translator</td><td>Interface translating human commands into kernel instructions</td></tr>
+              <tr><td><strong>User</strong></td><td>The Customer</td><td>The person giving instructions at the terminal</td></tr>
+              <tr><td><strong>Application</strong></td><td>The Specific Recipe</td><td>A program designed for a specific task (browser, editor, etc.)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Kernel's four roles -->
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🧠</span> The Kernel's Four Critical Areas</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🧠 Memory Management</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The kernel decides which program gets to use the computer's RAM — the temporary space where active information lives. It ensures programs don't steal each other's memory, like the Master Chef deciding which dish gets the biggest pot.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">⚙️ Process Management</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The kernel ensures every program gets a fair turn to use the CPU. Like a chef managing multiple dishes on the stove — nothing burns, nothing is ignored. Each process takes turns sharing the processor.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🔌 Device Drivers</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The kernel acts as a universal translator for hardware. It knows how to talk to your screen, your keyboard, your printer — so your programs don't have to learn a different language for every brand of device.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-2 flex items-center gap-2">🛡️ System Security</h4>
+            <p class="text-slate-mid text-sm leading-relaxed">The kernel acts as a guard — enforcing that one user cannot look at another user's private files or break the computer. It validates every request against the permission rules before executing it.</p>
+          </div>
+        </div>
+
+        <!-- Shell as translator -->
+        <div class="rounded-2xl bg-slate p-6 text-white">
+          <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Key Insight</p>
+          <h4 class="font-display font-semibold text-xl mb-3">Why We Need the Shell</h4>
+          <p class="text-slate-light text-sm leading-relaxed mb-4">The kernel is incredibly powerful, but it doesn't speak human languages. It only understands complex electrical signals and binary numbers. <strong class="text-white">Bash</strong> (Bourne Again SHell) is the world's most popular shell — a waiter that takes your order in plain English (<code class="bg-white/10 text-white">ls -la</code>) and translates it into the technical language the Master Chef understands.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">what happens when you type a command</span></div>
+            <div class="terminal-body">
+              <span class="cmt"># You type (human language)</span><br>
+              <span class="ok">$</span> <span class="cmd">ls</span> <span class="flag">-la</span> <span class="arg">/home/alice</span><br><br>
+              <span class="cmt"># Bash (the waiter) translates it → sends to kernel</span><br>
+              <span class="cmt"># Kernel reads the file system → returns data</span><br>
+              <span class="cmt"># Bash formats the result → prints it to your screen</span><br><br>
+              <span class="ok">drwxr-xr-x  alice  alice  4096  Jan 01  Documents</span><br>
+              <span class="ok">-rw-r--r--  alice  alice   512  Jan 01  notes.txt</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-architecture -->
+
+
+    <!-- ══ TAB 3: FILE SYSTEM ══ -->
+    <div id="tab-filesystem" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🌳</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">One Giant House With Named Rooms</h2>
+            <p class="text-slate-mid leading-relaxed mb-3">Unlike Windows where different drives get letters like <code>C:</code> or <code>D:</code>, Linux puts <strong>everything</strong> into one single structure called the <strong>root</strong> — represented by a single forward slash <code>/</code>. Every file, program, and even piece of hardware is a branch on this giant tree starting from <code>/</code>.</p>
+            <p class="text-slate-mid leading-relaxed">Think of the computer as a large house. The file system is the way the rooms and cabinets are arranged. Every room has a specific purpose, and every item has a <strong>path</strong> — the list of rooms you walk through to find it.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual filesystem tree -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🏠</span> The Essential Rooms of the Linux House</h2>
+
+        <div class="terminal-window mb-6">
+          <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">/ — the root of everything</span></div>
+          <div class="terminal-body">
+            <span class="ok">/</span>  <span class="cmt">← The front door of the entire house</span><br>
+            <span class="ok">├──</span> <span class="cmd">bin/</span>    <span class="cmt">← Essential tool drawer (ls, cp, mv...)</span><br>
+            <span class="ok">├──</span> <span class="cmd">sbin/</span>   <span class="cmt">← Basement — heavy tools for the owner only</span><br>
+            <span class="ok">├──</span> <span class="cmd">etc/</span>    <span class="cmt">← The Rule Book — config files for every program</span><br>
+            <span class="ok">├──</span> <span class="cmd">home/</span>   <span class="cmt">← The Bedrooms — one folder per regular user</span><br>
+            <span class="ok">│   └──</span> <span class="path">alice/</span>  <span class="cmt">← Alice's private room</span><br>
+            <span class="ok">├──</span> <span class="cmd">root/</span>   <span class="cmt">← Owner's Private Suite (superuser only)</span><br>
+            <span class="ok">├──</span> <span class="cmd">var/</span>    <span class="cmt">← The House Logbook (logs, mail queues)</span><br>
+            <span class="ok">├──</span> <span class="cmd">tmp/</span>    <span class="cmt">← Scrap Paper Pile (cleared on reboot)</span><br>
+            <span class="ok">├──</span> <span class="cmd">dev/</span>    <span class="cmt">← Hardware Closet (keyboard, mouse as files)</span><br>
+            <span class="ok">├──</span> <span class="cmd">proc/</span>   <span class="cmt">← House Sensors — live kernel data (virtual)</span><br>
+            <span class="ok">└──</span> <span class="cmd">sys/</span>    <span class="cmt">← More sensors — hardware state (virtual)</span>
+          </div>
+        </div>
+
+        <!-- Room-by-room cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/bin</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Essential Tool Drawer</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Contains "binaries" — the basic executable tools every user needs. Commands like <code>ls</code>, <code>cp</code>, <code>mv</code>, <code>cat</code>. If these break, the house is unusable.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/sbin</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Basement</p>
+              <p class="text-slate-mid text-xs leading-relaxed">System binaries for heavy maintenance. Only the root (owner) user should access these — like the boiler or the fuse box. Regular users have no business here.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/etc</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Rule Book</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Configuration files for every installed program. Like a manual on the wall telling the chefs what temperature the oven should be. Change a file here and the entire program's behaviour changes.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/home</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Bedrooms</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Personal folders for every regular user. <code>/home/alice</code>, <code>/home/bob</code>. Only the room's owner can enter. Your Documents, Pictures, and config files live here.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/root</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Owner's Private Suite</p>
+              <p class="text-slate-mid text-xs leading-relaxed">The home folder for the superuser — kept completely separate from regular bedrooms for extra security. The most powerful account on the system lives here.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/var</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The House Logbook</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Stores variable, ever-changing files: system logs, mail queues, databases. Like a logbook recording when the mail arrived and if any lightbulbs burned out.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/tmp</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Scrap Paper Pile</p>
+              <p class="text-slate-mid text-xs leading-relaxed">Temporary files that programs create while working. The system wipes this clean on every reboot — like throwing away the notepad after doing a quick calculation.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/dev</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The Hardware Closet</p>
+              <p class="text-slate-mid text-xs leading-relaxed">In Linux, every piece of hardware is treated as a file. Your keyboard is <code>/dev/input/keyboard</code>. Your hard drive is <code>/dev/sda</code>. Everything is a file — a fundamental Linux philosophy.</p>
+            </div>
+          </div>
+
+          <div class="fs-node rounded-xl bg-white border border-slate/10 p-4 flex items-start gap-3 md:col-span-2">
+            <code class="text-amber text-sm flex-shrink-0 mt-0.5">/proc &amp; /sys</code>
+            <div>
+              <p class="font-bold text-slate text-sm mb-0.5">The House Sensors — Virtual Rooms</p>
+              <p class="text-slate-mid text-xs leading-relaxed">These directories don't physically exist on the hard drive. They are created live by the kernel and show real-time information about what the brain is thinking right now — CPU usage, memory, running processes. Like sensors on the wall showing current temperature and humidity.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /tab-filesystem -->
+
+
+    <!-- ══ TAB 4: NAVIGATION COMMANDS ══ -->
+    <div id="tab-navigation" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🧭</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Opening Your Eyes in the House</h2>
+            <p class="text-slate-mid leading-relaxed">Every Bash command follows a three-part pattern: the <strong>Command Name</strong> (what to do), the <strong>Options/Flags</strong> (how to do it — prefixed with a dash), and the <strong>Argument</strong> (what to do it to). Master these three navigation commands and you can find anything in the Linux file system.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ls -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">👁️</span> <code>ls</code> — List: Open Your Eyes</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">The <code>ls</code> command shows you what is inside a folder. Like opening your eyes to see everything in a room. It is the first command every Linux user learns.</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Option</th><th>Name</th><th>What It Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>-a</code></td><td>All</td><td>Shows hidden items (files starting with a dot) — like a secret drawer under the counter</td></tr>
+              <tr><td><code>-l</code></td><td>Long</td><td>Shows details: permissions, owner, file size, and last-modified timestamp</td></tr>
+              <tr><td><code>-h</code></td><td>Human-readable</td><td>Changes raw byte counts into readable units: KB, MB, GB</td></tr>
+              <tr><td><code>-R</code></td><td>Recursive</td><td>Looks inside every folder and every folder inside those — a full master search</td></tr>
+              <tr><td><code>-t</code></td><td>Time</td><td>Sorts items by when they were last modified — newest first</td></tr>
+              <tr><td><code>-S</code></td><td>Size</td><td>Sorts items by file size — largest first</td></tr>
+              <tr><td><code>-r</code></td><td>Reverse</td><td>Reverses the sort order of any other flag</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="terminal-window">
+          <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">ls examples</span></div>
+          <div class="terminal-body">
+            <span class="cmt"># Basic — what's in this folder?</span><br>
+            <span class="ok">$</span> <span class="cmd">ls</span><br>
+            <span class="arg">Documents  Downloads  notes.txt  script.sh</span><br><br>
+            <span class="cmt"># Professional combo: long + human + hidden files</span><br>
+            <span class="ok">$</span> <span class="cmd">ls</span> <span class="flag">-lah</span><br>
+            <span class="perm">drwxr-xr-x</span>  alice  alice  <span class="arg">4.0K</span>  Jan 10  <span class="cmd">Documents</span><br>
+            <span class="perm">-rw-r--r--</span>  alice  alice  <span class="arg"> 512</span>  Jan 10  notes.txt<br>
+            <span class="path">-rw-------</span>  alice  alice  <span class="arg"> 256</span>  Jan 09  .bash_history <span class="cmt">← hidden</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- cd -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🚶</span> <code>cd</code> — Change Directory: Walk Through Doors</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-3 text-sm">Essential cd Shortcuts</h4>
+            <ul class="space-y-2 text-slate-mid text-sm">
+              <li class="flex items-start gap-2"><code class="text-amber flex-shrink-0">cd Documents</code><span>Walk into the Documents room</span></li>
+              <li class="flex items-start gap-2"><code class="text-amber flex-shrink-0">cd ..</code><span>Go back one level — the parent room</span></li>
+              <li class="flex items-start gap-2"><code class="text-amber flex-shrink-0">cd ~</code><span>Instantly return to your home bedroom</span></li>
+              <li class="flex items-start gap-2"><code class="text-amber flex-shrink-0">cd -</code><span>Return to the previous room (like a back button)</span></li>
+              <li class="flex items-start gap-2"><code class="text-amber flex-shrink-0">cd /</code><span>Jump to the front door — the root of everything</span></li>
+            </ul>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <h4 class="font-bold text-slate mb-3 text-sm">Absolute vs. Relative Paths</h4>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+              <div class="terminal-body" style="font-size:0.72rem;">
+                <span class="cmt"># Absolute — starts from /</span><br>
+                <span class="ok">$</span> <span class="cmd">cd</span> <span class="path">/home/alice/Documents</span><br><br>
+                <span class="cmt"># Relative — from where you are now</span><br>
+                <span class="ok">$</span> <span class="cmd">cd</span> <span class="arg">Documents/Projects</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- pwd -->
+      <div class="mb-6">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📍</span> <code>pwd</code> — Print Working Directory: Where Am I?</h2>
+        <div class="pro-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">When you get lost deep inside nested folders, <code>pwd</code> tells you exactly where you are — the complete path from the front door <code>/</code> all the way to your current room. Essential when running scripts that need to know their own location.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">pwd</span></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">pwd</span><br>
+              <span class="path">/home/alice/Documents/Projects/website</span><br><br>
+              <span class="cmt"># You are now five rooms deep from the front door</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-navigation -->
+
+
+    <!-- ══ TAB 5: ACTION COMMANDS ══ -->
+    <div id="tab-actions" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">✂️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Creating, Moving, and Destroying</h2>
+            <p class="text-slate-mid leading-relaxed">Navigation lets you look around. Action commands let you <em>change things</em> — build new rooms, make copies of items, move things from one room to another, and delete them. The most important rule: <strong>there is no Trash Can on a Linux server. Deleted means gone forever.</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 mb-6">
+
+        <!-- mkdir -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">🏗️ <code>mkdir</code> — Make Directory</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Creates a new room (folder). The <code>-p</code> flag builds an entire hallway of nested rooms at once — no need to create them one by one.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">mkdir</span> <span class="arg">Reports</span>                     <span class="cmt">← one room</span><br>
+              <span class="ok">$</span> <span class="cmd">mkdir</span> <span class="flag">-p</span> <span class="arg">Projects/2026/January</span>  <span class="cmt">← full hallway at once</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- touch -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">📄 <code>touch</code> — Create a Blank File</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Creates a new, empty file — like placing a blank sheet of paper on the desk. Also updates a file's "last modified" timestamp without changing its contents.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">touch</span> <span class="arg">notes.txt</span>       <span class="cmt">← new blank file</span><br>
+              <span class="ok">$</span> <span class="cmd">touch</span> <span class="arg">notes.txt</span>       <span class="cmt">← updates timestamp (file unchanged)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- cp -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">📋 <code>cp</code> — Copy</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Makes a duplicate — like putting a photo in a copy machine. The original stays untouched; a new copy appears at the destination.</p>
+          <div class="rounded-xl overflow-hidden border border-slate/10 mb-4">
+            <table class="oc-table">
+              <thead><tr><th>Option</th><th>Name</th><th>Practical Use</th></tr></thead>
+              <tbody>
+                <tr><td><code>-r</code></td><td>Recursive</td><td>Copies an entire folder and all its contents — essential for directories</td></tr>
+                <tr><td><code>-p</code></td><td>Preserve</td><td>Keeps the original owner, timestamps, and permissions on the copy</td></tr>
+                <tr><td><code>-u</code></td><td>Update</td><td>Only copies if the source is newer than the existing copy — smart syncing</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">cp</span> <span class="arg">notes.txt</span> <span class="arg">backup/notes.txt</span>   <span class="cmt">← single file</span><br>
+              <span class="ok">$</span> <span class="cmd">cp</span> <span class="flag">-rp</span> <span class="arg">Projects/</span> <span class="arg">/backup/Projects/</span>  <span class="cmt">← whole folder, preserved</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- mv -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">🚚 <code>mv</code> — Move and Rename</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">In Linux, moving a file and renaming it are the <em>same command</em>. You're just picking up an item and putting it somewhere else or giving it a new label. The original disappears from its old location.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">mv</span> <span class="arg">notes.txt</span> <span class="arg">Documents/notes.txt</span>  <span class="cmt">← move to a different room</span><br>
+              <span class="ok">$</span> <span class="cmd">mv</span> <span class="arg">old_name.txt</span> <span class="arg">new_name.txt</span>     <span class="cmt">← rename in the same room</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- rm -->
+        <div class="rounded-2xl border-2 border-red-200 bg-red-50/50 p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">🗑️ <code>rm</code> — Remove <span class="text-red-600 text-sm font-body font-semibold">⚠️ No Undo</span></h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Deletes files permanently. There is no Trash Can, no Recycle Bin, no Undo button on a server. Once gone, it's gone. This is the most dangerous command a beginner can type.</p>
+          <div class="rounded-xl overflow-hidden border border-red-200 mb-4">
+            <table class="oc-table">
+              <thead><tr><th>Option</th><th>Name</th><th>Why It's Used</th></tr></thead>
+              <tbody>
+                <tr><td><code>-i</code></td><td>Interactive</td><td class="text-green-700 font-semibold">✓ Recommended for beginners — asks "Are you sure?" before each deletion</td></tr>
+                <tr><td><code>-r</code></td><td>Recursive</td><td>Deletes an entire folder and everything inside it — all sub-folders too</td></tr>
+                <tr><td><code>-f</code></td><td>Force</td><td class="text-red-600 font-semibold">⚠️ Deletes without asking, even protected files. Use with extreme caution</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">rm</span> <span class="flag">-i</span> <span class="arg">notes.txt</span>     <span class="cmt">← safe: asks before deleting</span><br>
+              <span class="warn">rm: remove regular file 'notes.txt'? y</span><br><br>
+              <span class="ok">$</span> <span class="cmd">rm</span> <span class="flag">-rf</span> <span class="arg">Projects/</span>    <span class="cmt">← dangerous: deletes entire folder silently</span><br>
+              <span class="perm">⚠️  No output. No confirmation. It's just gone.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-actions -->
+
+
+    <!-- ══ TAB 6: READING & SEARCHING ══ -->
+    <div id="tab-reading" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔍</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">Reading Books and Finding Words</h2>
+            <p class="text-slate-mid leading-relaxed">Linux servers produce enormous amounts of text: log files, config files, output data. You need tools to read them and to filter out exactly the line you're looking for in a file with thousands of entries. These three commands are your reading glasses and magnifying glass.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 mb-6">
+
+        <!-- cat -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">📖 <code>cat</code> — Concatenate: Read the Whole Book</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Displays the entire contents of a file on screen. Like opening a book and reading every page at once. Best for short files — large files will scroll past too fast to read.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">cat</span> <span class="arg">notes.txt</span>         <span class="cmt">← print whole file</span><br>
+              <span class="ok">$</span> <span class="cmd">cat</span> <span class="flag">-n</span> <span class="arg">notes.txt</span>      <span class="cmt">← with line numbers</span><br>
+              <span class="ok">$</span> <span class="cmd">cat</span> <span class="arg">file1.txt file2.txt</span>  <span class="cmt">← concatenate (join) multiple files</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- grep -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">🔎 <code>grep</code> — The Magnifying Glass</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">Searches for a specific word or pattern inside a file or stream. Like using a magnifying glass to find a specific name in a giant phone book. One of the most powerful and frequently used commands in Linux.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div class="info-card bg-white rounded-xl p-3 text-center">
+              <code class="text-amber text-sm">-i</code>
+              <p class="text-slate text-xs font-bold mt-1">Case-Insensitive</p>
+              <p class="text-slate-light text-xs mt-0.5">Finds "Error", "ERROR", "error"</p>
+            </div>
+            <div class="info-card bg-white rounded-xl p-3 text-center">
+              <code class="text-amber text-sm">-v</code>
+              <p class="text-slate text-xs font-bold mt-1">Invert Match</p>
+              <p class="text-slate-light text-xs mt-0.5">Shows everything EXCEPT the word</p>
+            </div>
+            <div class="info-card bg-white rounded-xl p-3 text-center">
+              <code class="text-amber text-sm">-r</code>
+              <p class="text-slate text-xs font-bold mt-1">Recursive</p>
+              <p class="text-slate-light text-xs mt-0.5">Searches every file in every folder</p>
+            </div>
+          </div>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="cmt"># Find "error" in a log file (case-insensitive)</span><br>
+              <span class="ok">$</span> <span class="cmd">grep</span> <span class="flag">-i</span> <span class="arg">"error"</span> <span class="path">/var/log/syslog</span><br><br>
+              <span class="cmt"># Search every file in the logs folder recursively</span><br>
+              <span class="ok">$</span> <span class="cmd">grep</span> <span class="flag">-r</span> <span class="arg">"Failed login"</span> <span class="path">/var/log/</span><br><br>
+              <span class="cmt"># Show all lines that DON'T contain "debug"</span><br>
+              <span class="ok">$</span> <span class="cmd">grep</span> <span class="flag">-v</span> <span class="arg">"debug"</span> <span class="arg">app.log</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- head and tail -->
+        <div class="pro-card rounded-2xl p-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-2 flex items-center gap-2">📰 <code>head</code> &amp; <code>tail</code> — Peek at the Beginning or End</h3>
+          <p class="text-slate-mid text-sm leading-relaxed mb-4"><code>head</code> shows the first 10 lines of a file. <code>tail</code> shows the last 10. Both accept <code>-n</code> to specify a custom number. <code>tail -f</code> is the professional's live monitoring tool — it watches a file and instantly prints new lines as they appear.</p>
+          <div class="terminal-window">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body">
+              <span class="ok">$</span> <span class="cmd">head</span> <span class="flag">-n 5</span> <span class="arg">server.log</span>   <span class="cmt">← first 5 lines</span><br>
+              <span class="ok">$</span> <span class="cmd">tail</span> <span class="flag">-n 20</span> <span class="arg">server.log</span>  <span class="cmt">← last 20 lines</span><br><br>
+              <span class="cmt"># The professional live-monitoring trick:</span><br>
+              <span class="ok">$</span> <span class="cmd">tail</span> <span class="flag">-f</span> <span class="path">/var/log/syslog</span>   <span class="cmt">← live news ticker</span><br>
+              <span class="ok">Jan 10 14:32:01 server sshd: Accepted login for alice</span><br>
+              <span class="ok">Jan 10 14:32:15 server cron: Running daily backup...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-reading -->
+
+
+    <!-- ══ TAB 7: PERMISSIONS ══ -->
+    <div id="tab-permissions" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔐</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Three Keys and Three Groups</h2>
+            <p class="text-slate-mid leading-relaxed">In a multi-user house, every file has three types of <strong>keys</strong> — Read, Write, and Execute — and three <strong>groups of people</strong> who might hold those keys: the Owner (you), the Group (your team), and Others (everyone else). The combination determines exactly who can do what.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Three keys -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🗝️</span> The Three Keys</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          <div class="info-card bg-white rounded-2xl p-6 text-center">
+            <div class="w-14 h-14 rounded-xl bg-green-50 border border-green-200 flex items-center justify-center text-2xl mx-auto mb-3">👁️</div>
+            <p class="tier-badge text-green-700 mb-1">r = 4</p>
+            <h3 class="font-display font-bold text-lg text-slate mb-2">Read</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">The power to look at a file or see what's inside a folder. Without this key, the file is invisible to you.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6 text-center">
+            <div class="w-14 h-14 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-2xl mx-auto mb-3">✏️</div>
+            <p class="tier-badge text-red-600 mb-1">w = 2</p>
+            <h3 class="font-display font-bold text-lg text-slate mb-2">Write</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">The power to change a file, delete it, or add new items to a folder. A crucial key to protect — grant it sparingly.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-6 text-center">
+            <div class="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-2xl mx-auto mb-3">▶️</div>
+            <p class="tier-badge text-blue-700 mb-1">x = 1</p>
+            <h3 class="font-display font-bold text-lg text-slate mb-2">Execute</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">The power to run a file as a program, or to <code>cd</code> into a folder. A script without this key just sits there — it cannot run.</p>
+          </div>
+        </div>
+
+        <!-- Reading ls -l output -->
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🏷️</span> Reading the Permission Label</h2>
+        <div class="pro-card rounded-2xl p-6 mb-6">
+          <p class="text-slate-mid text-sm leading-relaxed mb-4">When you run <code>ls -l</code>, you see a string like <code>-rwxr-xr--</code>. This is the Lock Label, broken into four parts:</p>
+          <div class="terminal-window mb-4">
+            <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+            <div class="terminal-body" style="font-size:0.8rem; letter-spacing:0.05em;">
+              <span class="perm">-</span><span class="pbit-r">r</span><span class="pbit-w">w</span><span class="pbit-x">x</span>  <span class="pbit-r">r</span><span class="pbit-no">-</span><span class="pbit-x">x</span>  <span class="pbit-r">r</span><span class="pbit-no">-</span><span class="pbit-no">-</span>  alice  staff  4096  Jan 10  script.sh<br><br>
+              <span class="perm">│</span>  <span class="ok">└─────┘</span>  <span class="warn">└─────┘</span>  <span class="flag">└─────┘</span><br>
+              <span class="perm">│</span>  <span class="ok">OWNER</span>    <span class="warn">GROUP</span>    <span class="flag">OTHERS</span><br>
+              <span class="perm">└── file type (- = file, d = directory)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Numeric code -->
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔢</span> The Numeric Code System</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Number</th><th>Symbol</th><th>Keys Held</th><th>Plain English</th></tr></thead>
+            <tbody>
+              <tr><td class="font-mono font-bold text-amber">7</td><td><span class="pbit-r">r</span><span class="pbit-w">w</span><span class="pbit-x">x</span></td><td>4+2+1</td><td>Can read, write, and execute — full control</td></tr>
+              <tr><td class="font-mono font-bold text-amber">6</td><td><span class="pbit-r">r</span><span class="pbit-w">w</span><span class="pbit-no">-</span></td><td>4+2</td><td>Can read and modify, but not run as a program</td></tr>
+              <tr><td class="font-mono font-bold text-amber">5</td><td><span class="pbit-r">r</span><span class="pbit-no">-</span><span class="pbit-x">x</span></td><td>4+1</td><td>Can read and run, but not modify</td></tr>
+              <tr><td class="font-mono font-bold text-amber">4</td><td><span class="pbit-r">r</span><span class="pbit-no">-</span><span class="pbit-no">-</span></td><td>4</td><td>Can only look at the file — read-only</td></tr>
+              <tr><td class="font-mono font-bold text-amber">0</td><td><span class="pbit-no">-</span><span class="pbit-no">-</span><span class="pbit-no">-</span></td><td>0</td><td>Cannot do anything — completely locked out</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="terminal-window">
+          <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">chmod examples</span></div>
+          <div class="terminal-body">
+            <span class="cmt"># Give owner all keys (7), group and others read+run (5)</span><br>
+            <span class="ok">$</span> <span class="cmd">chmod</span> <span class="arg">755</span> <span class="path">script.sh</span><br><br>
+            <span class="cmt"># Private file: only owner can read/write (6), no one else (0)</span><br>
+            <span class="ok">$</span> <span class="cmd">chmod</span> <span class="arg">600</span> <span class="path">~/.ssh/id_rsa</span><br><br>
+            <span class="cmt"># Change the owner of a file</span><br>
+            <span class="ok">$</span> <span class="cmd">chown</span> <span class="arg">alice:developers</span> <span class="path">project.txt</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-permissions -->
+
+
+    <!-- ══ TAB 8: PIPES & REDIRECTION ══ -->
+    <div id="tab-pipes" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏭</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Factory Assembly Line</h2>
+            <p class="text-slate-mid leading-relaxed">One of Linux's most powerful ideas is connecting tools together. Imagine a factory assembly line: the first worker makes a toy, the second worker paints it, the third puts it in a box. The <strong>Pipe</strong> <code>|</code> is the conveyor belt. Each command produces output that becomes the next command's input — creating powerful chains from simple tools.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Standard streams -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🚰</span> The Three Standard Streams</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <div class="text-3xl mb-2">⌨️</div>
+            <p class="tier-badge text-slate-mid mb-1">stdin (0)</p>
+            <h4 class="font-bold text-slate mb-1">Standard Input</h4>
+            <p class="text-slate-mid text-xs leading-relaxed">The hose where ingredients come in. Usually the keyboard — but can be redirected from a file or another command's output.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <div class="text-3xl mb-2">🖥️</div>
+            <p class="tier-badge text-amber mb-1">stdout (1)</p>
+            <h4 class="font-bold text-slate mb-1">Standard Output</h4>
+            <p class="text-slate-mid text-xs leading-relaxed">The hose where the finished product comes out. Usually the screen — but can be redirected to a file or piped to another command.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5 text-center">
+            <div class="text-3xl mb-2">🚨</div>
+            <p class="tier-badge text-red-600 mb-1">stderr (2)</p>
+            <h4 class="font-bold text-slate mb-1">Standard Error</h4>
+            <p class="text-slate-mid text-xs leading-relaxed">A separate "Oops!" hose. Error messages travel here independently so they can be captured separately from successful output.</p>
+          </div>
+        </div>
+
+        <!-- Connector symbols -->
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🔗</span> The Connector Symbols</h2>
+        <div class="space-y-4 mb-6">
+          <div class="pro-card rounded-2xl p-5 flex items-start gap-4">
+            <code class="text-amber font-bold text-xl flex-shrink-0 mt-0.5">|</code>
+            <div>
+              <h4 class="font-bold text-slate mb-1">Pipe — The Conveyor Belt</h4>
+              <p class="text-slate-mid text-sm leading-relaxed">Connects the stdout of one command directly into the stdin of another. Chains commands into powerful assembly lines. <br/><code>ls | grep "homework"</code> — list files, then filter for ones containing "homework".</p>
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5 flex items-start gap-4">
+            <code class="text-amber font-bold text-xl flex-shrink-0 mt-0.5">&gt;</code>
+            <div>
+              <h4 class="font-bold text-slate mb-1">Output Redirect — Overwrite</h4>
+              <p class="text-slate-mid text-sm leading-relaxed">Takes the output and pours it into a file instead of the screen. <strong>Overwrites</strong> everything that was already there. Like replacing a notepad's contents entirely. <br/><code>ls -la &gt; file_list.txt</code></p>
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5 flex items-start gap-4">
+            <code class="text-amber font-bold text-xl flex-shrink-0 mt-0.5">&gt;&gt;</code>
+            <div>
+              <h4 class="font-bold text-slate mb-1">Append Redirect — Add to End</h4>
+              <p class="text-slate-mid text-sm leading-relaxed">Takes the output and <strong>adds it to the end</strong> of a file without erasing old content. Like flipping to the next blank page in a notepad. <br/><code>echo "new entry" &gt;&gt; logfile.txt</code></p>
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5 flex items-start gap-4">
+            <code class="text-amber font-bold text-xl flex-shrink-0 mt-0.5">2&gt;</code>
+            <div>
+              <h4 class="font-bold text-slate mb-1">Error Redirect — Capture Mistakes</h4>
+              <p class="text-slate-mid text-sm leading-relaxed">Takes only the "Oops!" (stderr) messages and saves them to a separate file. Keeps your output clean while preserving error details for debugging. <br/><code>./script.sh 2&gt; errors.log</code></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pipe chain terminal demo -->
+        <div class="terminal-window">
+          <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">pipe chains — real-world examples</span></div>
+          <div class="terminal-body">
+            <span class="cmt"># Count how many times "error" appears in a log</span><br>
+            <span class="ok">$</span> <span class="cmd">cat</span> <span class="arg">server.log</span> <span class="flag">|</span> <span class="cmd">grep</span> <span class="flag">-i</span> <span class="arg">"error"</span> <span class="flag">|</span> <span class="cmd">wc -l</span><br>
+            <span class="ok">47</span><br><br>
+            <span class="cmt"># List the 5 largest files in the current directory</span><br>
+            <span class="ok">$</span> <span class="cmd">ls</span> <span class="flag">-lS</span> <span class="flag">|</span> <span class="cmd">head</span> <span class="flag">-n 5</span><br><br>
+            <span class="cmt"># Find unique IP addresses in an access log</span><br>
+            <span class="ok">$</span> <span class="cmd">cat</span> <span class="arg">access.log</span> <span class="flag">|</span> <span class="cmd">awk</span> <span class="arg">'{print $1}'</span> <span class="flag">|</span> <span class="cmd">sort</span> <span class="flag">|</span> <span class="cmd">uniq</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-pipes -->
+
+
+    <!-- ══ TAB 9: PACKAGES & EDITORS ══ -->
+    <div id="tab-packages" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏪</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Safe Neighbourhood Store</h2>
+            <p class="text-slate-mid leading-relaxed">In traditional systems, you downloaded software from random websites and hoped it wasn't a virus. Linux uses a <strong>Package Manager</strong> — a giant, safe, curated store for your neighbourhood. Every item has been checked for safety. The delivery truck (package manager) even knows which batteries each toy needs and fetches them automatically.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distros and package managers -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🍦</span> Distributions — Different Flavours of Linux</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Because Linux is Open Source, many different groups have created their own versions — called <strong>distros</strong>. They're all Linux (all ice cream) but with different tools and communities (different toppings).</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Distribution Family</th><th>Package Manager</th><th>Best Used In</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Debian / Ubuntu</strong></td><td><code>apt</code></td><td>Most home computers, cloud servers, beginner-friendly</td></tr>
+              <tr><td><strong>Red Hat / Fedora / CentOS</strong></td><td><code>dnf</code> or <code>yum</code></td><td>Large enterprises, AWS AMIs, corporate environments</td></tr>
+              <tr><td><strong>Arch Linux</strong></td><td><code>pacman</code></td><td>Experts who want to build a fully custom system from scratch</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- apt commands -->
+        <div class="terminal-window mb-8">
+          <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div><span class="text-white/40 text-xs ml-3 font-mono">apt — the Ubuntu/Debian delivery truck</span></div>
+          <div class="terminal-body">
+            <span class="cmt"># Update the store's catalogue (check for new versions)</span><br>
+            <span class="ok">$</span> <span class="cmd">sudo</span> <span class="arg">apt update</span><br><br>
+            <span class="cmt"># Install a package (apt gets it + all its "batteries")</span><br>
+            <span class="ok">$</span> <span class="cmd">sudo</span> <span class="arg">apt install</span> <span class="path">vlc</span><br><br>
+            <span class="cmt"># Upgrade all installed packages to their latest versions</span><br>
+            <span class="ok">$</span> <span class="cmd">sudo</span> <span class="arg">apt upgrade</span><br><br>
+            <span class="cmt"># Remove a package (but keep its config files)</span><br>
+            <span class="ok">$</span> <span class="cmd">sudo</span> <span class="arg">apt remove</span> <span class="path">vlc</span>
+          </div>
+        </div>
+
+        <!-- Text editors -->
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">📝</span> Text Editors — Writing in the Terminal</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">To truly use Linux professionally, you must be able to create and edit config files in the terminal. Two editors dominate: one is beginner-friendly, one is legendary.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-green-50 border border-green-200 flex items-center justify-center text-2xl">📗</div>
+              <div>
+                <p class="tier-badge text-green-700 mb-0.5">Beginner Friendly</p>
+                <h3 class="font-display font-bold text-lg text-slate">Nano</h3>
+              </div>
+            </div>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">The friendly notepad. Shows shortcut keys at the bottom of the screen. What you see is what you get — just type, and it appears on screen.</p>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+              <div class="terminal-body" style="font-size:0.7rem;">
+                <span class="ok">$</span> <span class="cmd">nano</span> <span class="arg">myfile.txt</span><br>
+                <span class="cmt"># Type your content</span><br>
+                <span class="warn">Ctrl+O</span> <span class="cmt">→ Save (Write Out)</span><br>
+                <span class="warn">Ctrl+X</span> <span class="cmt">→ Exit</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card bg-white rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl">🧙</div>
+              <div>
+                <p class="tier-badge text-amber mb-0.5">The Wizard's Wand</p>
+                <h3 class="font-display font-bold text-lg text-slate">Vim</h3>
+              </div>
+            </div>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">A modal editor with different modes for different tasks. Hard to learn, but incredibly fast once mastered. Vim is on virtually every Linux server on earth.</p>
+            <div class="terminal-window">
+              <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+              <div class="terminal-body" style="font-size:0.7rem;">
+                <span class="ok">$</span> <span class="cmd">vim</span> <span class="arg">myfile.txt</span><br>
+                <span class="warn">i</span>     <span class="cmt">→ Insert Mode (type here)</span><br>
+                <span class="warn">Esc</span>   <span class="cmt">→ Back to Normal Mode</span><br>
+                <span class="warn">:wq</span>   <span class="cmt">→ Save and Quit</span><br>
+                <span class="warn">:q!</span>   <span class="cmt">→ Quit WITHOUT saving</span><br>
+                <span class="warn">dd</span>    <span class="cmt">→ Delete current line</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /tab-packages -->
+
+
+    <!-- ══ TAB 10: BOOT PROCESS ══ -->
+    <div id="tab-boot" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">⚡</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-3">The Morning Routine</h2>
+            <p class="text-slate-mid leading-relaxed">When you press the power button, the computer doesn't just "turn on." It follows a strict, sequential Morning Routine — waking up each system in the right order before the next one can start. Like a chef who must first unlock the building, then turn on the stove, before the team can arrive and cook.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boot steps -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-6 flex items-center gap-3"><span class="text-2xl">🌅</span> The Four Stages of Boot</h2>
+
+        <div class="space-y-4 mb-8">
+
+          <div class="boot-step rounded-xl bg-white border border-slate/10 p-6 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber flex items-center justify-center text-white font-bold text-lg flex-shrink-0">1</div>
+            <div>
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
+                <h4 class="font-display font-bold text-lg text-slate">BIOS — The Alarm Clock</h4>
+                <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Firmware Level</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed">A tiny program permanently burned into a chip on the motherboard. It wakes up when power arrives and performs a <strong>POST</strong> (Power-On Self-Test) — checking that the stove, the refrigerator, and the sink all exist and are working. Then it looks for a bootable device (a hard drive or USB).</p>
+            </div>
+          </div>
+
+          <div class="boot-step rounded-xl bg-white border border-slate/10 p-6 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber flex items-center justify-center text-white font-bold text-lg flex-shrink-0">2</div>
+            <div>
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
+                <h4 class="font-display font-bold text-lg text-slate">MBR &amp; GRUB — Picking Your Outfit</h4>
+                <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Bootloader</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed">The <strong>MBR</strong> (Master Boot Record) is a tiny sector at the very beginning of the hard drive. It contains enough code to find and launch <strong>GRUB</strong> (the bootloader). If you have both Windows and Linux installed, GRUB shows you a menu to choose which operating system to wear today. This is the wardrobe stage.</p>
+            </div>
+          </div>
+
+          <div class="boot-step rounded-xl bg-white border border-slate/10 p-6 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber flex items-center justify-center text-white font-bold text-lg flex-shrink-0">3</div>
+            <div>
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
+                <h4 class="font-display font-bold text-lg text-slate">Kernel — The Master Chef Wakes Up</h4>
+                <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">OS Core</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed">GRUB loads the Linux kernel into RAM. The kernel immediately takes control of all hardware — it starts the memory manager, initialises device drivers, and sets up the file systems. This is the Master Chef putting on their apron, turning on every burner, and stocking the workspace.</p>
+            </div>
+          </div>
+
+          <div class="boot-step rounded-xl bg-white border border-slate/10 p-6 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">4</div>
+            <div>
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
+                <h4 class="font-display font-bold text-lg text-slate">Init &amp; Services — Opening for Business</h4>
+                <span class="tier-badge px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">Userspace</span>
+              </div>
+              <p class="text-slate-mid text-sm leading-relaxed">The very first program the kernel runs is <strong>init</strong> (Process ID = 1). On modern systems this is <strong>systemd</strong>. Init is the head manager who opens the kitchen for business — it starts all background services in the correct order: networking, the login screen, the web server, the database. When init is done, your system is ready to use.</p>
+              <div class="terminal-window mt-3">
+                <div class="terminal-bar"><div class="terminal-dot" style="background:#FF5F57;"></div><div class="terminal-dot" style="background:#FEBC2E;"></div><div class="terminal-dot" style="background:#28C840;"></div></div>
+                <div class="terminal-body" style="font-size:0.72rem;">
+                  <span class="ok">$</span> <span class="cmd">systemctl</span> <span class="arg">status nginx</span>   <span class="cmt">← check a service</span><br>
+                  <span class="ok">$</span> <span class="cmd">systemctl</span> <span class="arg">start nginx</span>    <span class="cmt">← start a service</span><br>
+                  <span class="ok">$</span> <span class="cmd">systemctl</span> <span class="arg">enable nginx</span>   <span class="cmt">← start on boot automatically</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Conclusion panel -->
+      <div class="rounded-2xl bg-slate p-8 text-white">
+        <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Summary</p>
+        <h2 class="font-display font-bold text-2xl md:text-3xl mb-4">From User to Master</h2>
+        <p class="text-slate-light leading-relaxed mb-5">Linux and Bash represent one of humanity's greatest collaborative achievements — an operating system that runs the world, built openly by millions of people, available to everyone for free. By understanding all its layers, you transform from a passive user into an active master of any machine.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 text-sm">
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Architecture:</strong> Kernel as Master Chef, Bash as the Waiter</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">File System:</strong> One tree from <code class="bg-white/10 text-white">/</code>, every room with a purpose</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Navigation:</strong> <code class="bg-white/10 text-white">ls · cd · pwd</code> — open your eyes and move</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Permissions:</strong> Three keys (rwx) for three groups — precision access control</span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Pipes:</strong> Chain simple tools into powerful assembly lines with <code class="bg-white/10 text-white">|</code></span></div>
+          <div class="flex items-start gap-2"><span class="text-amber mt-0.5 flex-shrink-0">→</span><span class="text-slate-light"><strong class="text-white">Boot Process:</strong> BIOS → GRUB → Kernel → Init — the Morning Routine</span></div>
+        </div>
+        <p class="text-slate-light text-sm leading-relaxed mb-6">The recipes are now open for everyone. The tools can be connected in infinite ways. The kitchen is yours — start cooking.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="ssh-explained.html"      class="px-4 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors">Next: SSH Explained →</a>
+          <a href="Cloud_Fundamentals.html" class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← Cloud Fundamentals</a>
+          <a href="index.html"              class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← All Topics</a>
+        </div>
+      </div>
+
+    </div><!-- /tab-boot -->
+
+  </main>
+</div>
+
+
+<!-- ═══════════════════════════ FOOTER (preserved exactly) ═══════════════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span>Built with ❤️ by</span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+          Anwaar
+        </span>
+        <span>· No jargon, just clarity.</span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-5">
+      <a href="#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+
+  </div>
+</footer>
+
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* Mobile menu */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* Reading progress */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('read-progress').style.width = (scrolled * 100) + '%';
+    document.getElementById('navbar').style.boxShadow =
+      doc.scrollTop > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* Tab switching */
+  function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b  => b.classList.toggle('active', b.dataset.tab === id));
+    document.querySelectorAll('.toc-link').forEach(l  => l.classList.toggle('active', l.dataset.tab === id));
+    if (id === 'history') setTimeout(renderOpenSourceChart, 150);
+  }
+
+  /* Open Source vs Proprietary Chart */
+  let osChartInstance = null;
+  function renderOpenSourceChart() {
+    const ctx = document.getElementById('openSourceChart');
+    if (!ctx) return;
+    if (osChartInstance) osChartInstance.destroy();
+
+    osChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Cost', 'Modifiable?', 'Portable?', 'Community Support', 'Security Fixes (Speed)'],
+        datasets: [
+          {
+            label: 'Proprietary Systems (Before Linux)',
+            data: [1, 0, 2, 1, 2],
+            backgroundColor: 'rgba(107,127,145,0.70)',
+            borderColor: '#6B7F91',
+            borderRadius: 6, borderWidth: 1.5,
+          },
+          {
+            label: 'Linux / Open Source',
+            data: [10, 10, 9, 10, 9],
+            backgroundColor: 'rgba(255,153,0,0.80)',
+            borderColor: '#FF9900',
+            borderRadius: 6, borderWidth: 1.5,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            backgroundColor: 'rgba(35,47,62,0.95)',
+            titleFont: { size: 13, family: 'DM Sans' },
+            bodyFont:  { size: 12, family: 'Roboto Mono' },
+            padding: 12,
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            title: { display: true, text: 'Score (0 = worst, 10 = best)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' },
+            suggestedMin: 0, suggestedMax: 11
+          }
+        }
+      }
+    });
+  }
+
+  // Render chart if first tab is visible on load
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(renderOpenSourceChart, 300);
+  });
+</script>
+</body>
+</html>
