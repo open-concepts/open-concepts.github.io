@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+  @font-face {
+    font-family: 'MySignature';
+    src: url('signature.ttf');
+    font-display: swap;
+  }
+</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open-Concepts — Technical Breakthroughs, Explained Simply</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:    '#FDFBF7',
+            'cream-dark': '#F5F0E8',
+            slate:    '#232F3E',
+            'slate-mid': '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:    '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale': '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+    #navbar { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(253,251,247,0.88); border-bottom: 1px solid rgba(35,47,62,0.08); }
+    .hero-title { font-family: 'Fraunces', Georgia, serif; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+    .hero-italic { font-style: italic; color: #FF9900; }
+    .logo-mark-wrap { filter: drop-shadow(0 20px 48px rgba(255,153,0,0.18)) drop-shadow(0 4px 16px rgba(35,47,62,0.12)); }
+    .logo-glow-ring { background: conic-gradient(from 0deg, #FF9900, #FFB84D, #232F3E, #FF9900); border-radius: 1.75rem; padding: 2px; animation: spin-ring 8s linear infinite; opacity: 0.7; }
+    @keyframes spin-ring { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .logo-badge { background: linear-gradient(160deg, #ffffff 0%, #FFF8EE 60%, #F5F0E8 100%); border: 1.5px solid rgba(255,153,0,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9); min-width: 280px; }
+    .logo-mono-oc { font-size: 4.5rem; color: #232F3E; letter-spacing: -0.06em; line-height: 1; }
+    .logo-mono-dot { font-family: 'Fraunces', serif; font-size: 5rem; color: #FF9900; line-height: 1; margin-bottom: -0.05em; }
+    .logo-pill { background: rgba(35,47,62,0.06); border: 1px solid rgba(35,47,62,0.10); border-radius: 999px; padding: 3px 10px; font-size: 0.65rem; font-weight: 600; color: #3D4F60; letter-spacing: 0.04em; font-family: 'DM Sans', sans-serif; }
+    .topic-card { transition: transform 0.22s cubic-bezier(.22,.68,0,1.2), box-shadow 0.22s ease, border-color 0.2s ease; border: 1.5px solid rgba(35,47,62,0.07); }
+    .topic-card:hover { transform: translateY(-5px) scale(1.012); box-shadow: 0 16px 40px rgba(35,47,62,0.13); border-color: rgba(255,153,0,0.35); }
+    .topic-card:hover .card-btn { background: #FF9900; color: #fff; }
+    .card-btn { transition: background 0.2s ease, color 0.2s ease; }
+    .pill.active { background: #232F3E; color: #fff; }
+    .pill { transition: background 0.18s, color 0.18s; cursor: pointer; }
+    .pill:hover:not(.active) { background: #FFB84D; color: #232F3E; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.6s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+    .icon-ring { border: 2px solid rgba(255,153,0,0.2); background: linear-gradient(135deg, #FFF3DC 0%, #fff 100%); }
+    footer { border-top: 1px solid rgba(35,47,62,0.10); }
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    /* ══ BILINGUAL SYSTEM ══ */
+    body.urdu-mode { direction: rtl; }
+    body.urdu-mode p, body.urdu-mode span:not(.logo-pill):not(.hero-italic):not(.logo-mono-dot):not(.text-amber):not(.tgl-flag),
+    body.urdu-mode h1, body.urdu-mode h2, body.urdu-mode h3, body.urdu-mode h4,
+    body.urdu-mode a, body.urdu-mode button:not(#lang-toggle), body.urdu-mode li, body.urdu-mode td, body.urdu-mode th {
+      font-family: 'Noto Nastaliq Urdu', serif;
+      line-height: 2.1;
+    }
+    .ur-text { display: none; }
+    body.urdu-mode .en-text { display: none; }
+    body.urdu-mode .ur-text { display: inline; }
+    #lang-toggle {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; align-items: center; gap: 8px;
+      background: #232F3E; color: #fff;
+      border: 2px solid rgba(255,153,0,0.4); border-radius: 999px;
+      padding: 10px 20px; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 6px 24px rgba(35,47,62,0.4);
+      transition: background 0.2s, transform 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      user-select: none;
+    }
+    #lang-toggle:hover { background: #FF9900; border-color: #FF9900; transform: translateY(-2px); }
+  </style>
+</head>
+<body class="min-h-screen relative">
+
+<!-- Language Toggle -->
+<button id="lang-toggle" onclick="toggleLanguage()">
+  <span id="tgl-flag">🇵🇰</span>
+  <span id="tgl-label">اردو میں پڑھیں</span>
+</button>
+
+<!-- NAVBAR -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="#topics" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">
+        <span class="en-text">All Topics</span><span class="ur-text">تمام موضوعات</span>
+      </a>
+      <a href="#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">
+        <span class="en-text">Roadmaps</span><span class="ur-text">سیکھنے کے راستے</span>
+      </a>
+      <a href="#about" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">
+        <span class="en-text">About</span><span class="ur-text">بارے میں</span>
+      </a>
+      <a href="#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">
+        <span class="en-text">Start Reading →</span><span class="ur-text">پڑھنا شروع کریں ←</span>
+      </a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="#topics" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/08 block"><span class="en-text">All Topics</span><span class="ur-text">تمام موضوعات</span></a>
+    <a href="#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/08 block"><span class="en-text">Roadmaps</span><span class="ur-text">سیکھنے کے راستے</span></a>
+    <a href="#about" onclick="closeMenu()" class="py-2 text-slate font-medium block"><span class="en-text">About</span><span class="ur-text">بارے میں</span></a>
+    <a href="#topics" onclick="closeMenu()" class="mt-1 px-4 py-2.5 rounded-lg bg-slate text-white text-sm font-medium text-center block"><span class="en-text">Start Reading →</span><span class="ur-text">پڑھنا شروع کریں</span></a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="relative pt-36 pb-10 px-5 text-center overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full opacity-20 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+    <div class="fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber/30 bg-amber-pale text-amber text-xs font-semibold uppercase tracking-widest mb-6">
+      <span>☁️</span>
+      <span class="en-text">Cloud · AI · Linux · DevOps</span>
+      <span class="ur-text">کلاؤڈ · اے آئی · لینکس · ڈیو اوپس</span>
+    </div>
+    <h1 class="hero-title fade-up delay-1 text-5xl md:text-7xl text-slate mb-5">
+      Open<span class="hero-italic">·</span>Concepts
+    </h1>
+    <p class="fade-up delay-2 font-display font-light italic text-slate-mid text-xl md:text-2xl mb-3">
+      <span class="en-text">Technical breakthroughs, <span class="text-amber font-semibold not-italic">explained simply.</span></span>
+      <span class="ur-text">تکنیکی انقلاب، <span class="text-amber font-semibold not-italic">آسان الفاظ میں۔</span></span>
+    </p>
+    <p class="fade-up delay-3 font-body text-slate-light text-base md:text-lg max-w-xl mx-auto mb-10">
+      <span class="en-text">No jargon. No fluff. Just clear, human explanations of the tech that powers our world.</span>
+      <span class="ur-text">کوئی پیچیدہ اصطلاح نہیں۔ کوئی بے فائدہ باتیں نہیں۔ صرف واضح، انسانی زبان میں ٹیکنالوجی کی وضاحت۔</span>
+    </p>
+
+    <!-- Logo Mark -->
+    <div class="fade-up delay-4 flex justify-center mt-10 mb-2">
+      <div class="logo-mark-wrap relative inline-flex items-center justify-center">
+        <div class="absolute inset-0 rounded-3xl logo-glow-ring"></div>
+        <div class="relative logo-badge rounded-3xl px-10 py-8 flex flex-col items-center gap-3">
+          <div class="flex gap-2 flex-wrap justify-center">
+            <span class="logo-pill">☁️ <span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+            <span class="logo-pill">🤖 AI/ML</span>
+            <span class="logo-pill">🐧 Linux</span>
+            <span class="logo-pill">⚙️ DevOps</span>
+          </div>
+          <div class="flex items-end gap-0 leading-none select-none">
+            <span class="logo-mono-oc font-display font-bold">OC</span>
+            <span class="logo-mono-dot">·</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="h-px w-10 bg-amber/40"></div>
+            <span class="font-body text-xs uppercase tracking-[0.25em] text-slate-light font-semibold">Open · Concepts</span>
+            <div class="h-px w-10 bg-amber/40"></div>
+          </div>
+          <div class="flex items-center gap-5 mt-1">
+            <div class="text-center">
+              <p class="font-display font-bold text-xl text-slate leading-none">50+</p>
+              <p class="text-slate-light text-[10px] uppercase tracking-widest mt-0.5"><span class="en-text">Concepts</span><span class="ur-text">موضوعات</span></p>
+            </div>
+            <div class="w-px h-8 bg-slate/15"></div>
+            <div class="text-center">
+              <p class="font-display font-bold text-xl text-slate leading-none">4</p>
+              <p class="text-slate-light text-[10px] uppercase tracking-widest mt-0.5"><span class="en-text">Categories</span><span class="ur-text">زمرے</span></p>
+            </div>
+            <div class="w-px h-8 bg-slate/15"></div>
+            <div class="text-center">
+              <p class="font-display font-bold text-xl text-amber leading-none">0</p>
+              <p class="text-slate-light text-[10px] uppercase tracking-widest mt-0.5"><span class="en-text">Jargon</span><span class="ur-text">پیچیدہ اصطلاح</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- FILTER PILLS -->
+<section class="py-10 px-5 max-w-7xl mx-auto">
+  <div class="flex flex-wrap justify-center gap-3" id="filter-pills">
+    <button onclick="filterCards('all')" class="pill active px-5 py-2 rounded-full border border-slate/15 text-sm font-medium bg-slate text-white">
+      ✦ <span class="en-text">All Topics</span><span class="ur-text">تمام موضوعات</span>
+    </button>
+    <button onclick="filterCards('cloud')" class="pill px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">
+      ☁️ <span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span>
+    </button>
+    <button onclick="filterCards('ai')" class="pill px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">
+      🤖 <span class="en-text">AI / ML</span><span class="ur-text">مصنوعی ذہانت</span>
+    </button>
+    <button onclick="filterCards('linux')" class="pill px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">
+      🐧 Linux
+    </button>
+    <button onclick="filterCards('howto')" class="pill px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">
+      📖 <span class="en-text">How-To Guides</span><span class="ur-text">رہنما کتابچے</span>
+    </button>
+    <button onclick="filterCards('devops')" class="pill px-5 py-2 rounded-full border border-slate/15 text-sm font-medium text-slate-mid">
+      ⚙️ DevOps
+    </button>
+  </div>
+</section>
+
+<!-- TOPIC GRID -->
+<section id="topics" class="pb-20 px-5 max-w-7xl mx-auto">
+  <div class="mb-10 flex items-end justify-between flex-wrap gap-3">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-1">
+        <span class="en-text">Explore</span><span class="ur-text">دریافت کریں</span>
+      </p>
+      <h2 class="font-display font-bold text-3xl md:text-4xl text-slate">
+        <span class="en-text">What Is… ?</span><span class="ur-text">کیا ہے… ؟</span>
+      </h2>
+    </div>
+    <p class="font-body text-slate-light text-sm max-w-xs text-right">
+      <span class="en-text">Tap any card to read a plain-English breakdown.</span>
+      <span class="ur-text">آسان وضاحت پڑھنے کے لیے کسی بھی کارڈ پر ٹیپ کریں۔</span>
+    </p>
+  </div>
+
+  <div id="card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+
+    <!-- Card: Linux Bash -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="linux">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🐧</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">Linux</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">Linux & Bash</span><span class="ur-text">لینکس اور بیش</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">The language of servers. Learn to talk to any Linux machine with just a keyboard and a terminal.</span>
+          <span class="ur-text">سرورز کی زبان۔ صرف کی بورڈ اور ٹرمینل سے کسی بھی لینکس مشین سے بات کرنا سیکھیں۔</span>
+        </p>
+      </div>
+      <a href="what-is-bash.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: Cloud Fundamentals -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">☁️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">Cloud Fundamentals</span><span class="ur-text">کلاؤڈ کے بنیادی اصول</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">The fundamentals of Cloud Computing solutions and their need.</span>
+          <span class="ur-text">کلاؤڈ کمپیوٹنگ کے حل اور ان کی ضرورت کے بنیادی اصول۔</span>
+        </p>
+      </div>
+      <a href="CloudFundamentals.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: EC2 -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🖥️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS EC2</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Rent a virtual computer in the cloud. Pick the size, install your software, and run anything you want.</span>
+          <span class="ur-text">کلاؤڈ میں ایک ورچوئل کمپیوٹر کرائے پر لیں۔ سائز چنیں، سافٹ ویئر انسٹال کریں، اور جو چاہیں چلائیں۔</span>
+        </p>
+      </div>
+      <a href="AWS-EC2.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: SSH -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="linux howto">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🔐</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Linux · How-To</span><span class="ur-text">لینکس · رہنمائی</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">SSH Explained</span><span class="ur-text">SSH کی وضاحت</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">A secure, encrypted tunnel into any remote machine. The essential remote-access skill every developer needs.</span>
+          <span class="ur-text">کسی بھی دور دراز مشین میں محفوظ، خفیہ سرنگ۔ ہر ڈویلپر کی ضروری ریموٹ رسائی مہارت۔</span>
+        </p>
+      </div>
+      <a href="what-is-ssh.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: S3 -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">☁️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS S3</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Amazon's giant cloud filing cabinet. Store any file — images, videos, code — and access it from anywhere.</span>
+          <span class="ur-text">ایمازون کی بڑی کلاؤڈ فائل کیبنٹ۔ تصاویر، ویڈیوز، کوڈ — کچھ بھی محفوظ کریں اور کہیں سے بھی رسائی حاصل کریں۔</span>
+        </p>
+      </div>
+      <a href="AWS-S3.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: IAM -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🔑</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS IAM</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Identity & Access Management — the bouncer that decides who can touch what in your AWS account.</span>
+          <span class="ur-text">شناخت اور رسائی کا انتظام — وہ محافظ جو فیصلہ کرتا ہے کہ آپ کے AWS اکاؤنٹ میں کون کیا کر سکتا ہے۔</span>
+        </p>
+      </div>
+      <a href="what-is-iam.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: Lambda -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">⚡</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS Lambda</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Run code without a server. Upload a function, define a trigger, and AWS handles everything else.</span>
+          <span class="ur-text">بغیر سرور کوڈ چلائیں۔ فنکشن اپ لوڈ کریں، ٹرگر متعین کریں، اور AWS باقی سب سنبھال لیتا ہے۔</span>
+        </p>
+      </div>
+      <a href="what-is-lambda.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: VPC -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="cloud">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🌐</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Cloud</span><span class="ur-text">کلاؤڈ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS VPC</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Your private neighbourhood inside AWS — walls, gates, and rooms for your cloud resources, all under your control.</span>
+          <span class="ur-text">AWS کے اندر آپ کا نجی محلہ — دیواریں، دروازے، اور کمرے آپ کے کلاؤڈ وسائل کے لیے، سب آپ کے کنٹرول میں۔</span>
+        </p>
+      </div>
+      <a href="what-is-vpc.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: Palo Alto -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="Networks">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🛡️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">Networks</span><span class="ur-text">نیٹ ورکس</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">Palo Alto Networks Firewall</span><span class="ur-text">پالو آلٹو نیٹ ورکس فائروال</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Next-Generation Firewall that identifies, controls, and inspects applications, users, and content in real-time.</span>
+          <span class="ur-text">اگلی نسل کا فائروال جو ایپلیکیشنز، صارفین اور مواد کو حقیقی وقت میں شناخت، کنٹرول اور جانچتا ہے۔</span>
+        </p>
+      </div>
+      <a href="Palo Alto Networks Firewall.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: GenAI -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">✨</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">Generative AI</span><span class="ur-text">تخلیقی مصنوعی ذہانت</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">AI that doesn't just analyze — it creates. Text, images, code, audio. The engine behind ChatGPT.</span>
+          <span class="ur-text">اے آئی جو صرف تجزیہ نہیں کرتی — بلکہ تخلیق کرتی ہے۔ متن، تصاویر، کوڈ، آڈیو۔ ChatGPT کا انجن۔</span>
+        </p>
+      </div>
+      <a href="what-is-generative-ai.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: LLMs -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🧠</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">Large Language Models</span><span class="ur-text">بڑے زبانی ماڈل</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">The brain behind AI chatbots. Neural networks trained on billions of words to predict and generate text.</span>
+          <span class="ur-text">اے آئی چیٹ بوٹس کا دماغ۔ اربوں الفاظ پر تربیت یافتہ نیورل نیٹ ورک جو متن پیش گوئی اور تخلیق کرتے ہیں۔</span>
+        </p>
+      </div>
+      <a href="what-is-llm.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: SageMaker -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🤖</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS SageMaker AI</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">AWS's ML studio — build, train and deploy machine learning models without managing servers.</span>
+          <span class="ur-text">AWS کا ML اسٹوڈیو — سرور مینج کیے بغیر مشین لرننگ ماڈل بنائیں، تربیت دیں اور تعینات کریں۔</span>
+        </p>
+      </div>
+      <a href="SagemakerAI.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: AWS Bedrock -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🤖</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">AWS Bedrock</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">AWS Marketplace for serverless AI models.</span>
+          <span class="ur-text">سرور لیس اے آئی ماڈلز کے لیے AWS بازار۔</span>
+        </p>
+      </div>
+      <a href="SagemakerAI.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: RAG -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="ai">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">📚</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">AI / ML</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">RAG (Retrieval AI)</span><span class="ur-text">RAG (بازیافت اے آئی)</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Give an AI a search engine. RAG lets models look up real documents before answering — no more hallucinations.</span>
+          <span class="ur-text">اے آئی کو سرچ انجن دیں۔ RAG ماڈلز کو جواب دینے سے پہلے اصل دستاویزات دیکھنے دیتا ہے — اب غلط فہمی نہیں۔</span>
+        </p>
+      </div>
+      <a href="what-is-rag.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: Docker -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🐳</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Docker</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Box your app and all its dependencies into a container so it runs identically everywhere — no more "works on my machine."</span>
+          <span class="ur-text">اپنی ایپ اور تمام انحصارات کو ایک کنٹینر میں بند کریں تاکہ یہ ہر جگہ ایک جیسا چلے — "میری مشین پر چلتا ہے" کا مسئلہ ختم۔</span>
+        </p>
+      </div>
+      <a href="what-is-docker.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: Kubernetes -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">⚙️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Kubernetes (K8s)</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">An orchestrator that manages hundreds of Docker containers — restarts failures, scales up demand, routes traffic.</span>
+          <span class="ur-text">ایک آرکیسٹریٹر جو سینکڑوں Docker کنٹینرز کا انتظام کرتا ہے — خرابیاں دوبارہ شروع کرتا ہے، مانگ کے ساتھ بڑھتا ہے، ٹریفک روٹ کرتا ہے۔</span>
+        </p>
+      </div>
+      <a href="what-is-kubernetes.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: CI/CD -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🔄</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">CI / CD Pipelines</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Automated assembly lines for code — test, build, and ship software faster with fewer human errors.</span>
+          <span class="ur-text">کوڈ کے لیے خودکار اسمبلی لائنیں — سافٹ ویئر کو تیزی سے ٹیسٹ کریں، بنائیں اور بھیجیں، کم انسانی غلطیوں کے ساتھ۔</span>
+        </p>
+      </div>
+      <a href="what-is-cicd.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: GitHub Pages -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="howto">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">📖</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold"><span class="en-text">How-To Guide</span><span class="ur-text">رہنما کتابچہ</span></span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">
+          <span class="en-text">Host a Site on GitHub Pages</span><span class="ur-text">GitHub Pages پر سائٹ ہوسٹ کریں</span>
+        </h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Free website hosting from GitHub, zero server config. Step-by-step from push to live URL in 10 minutes.</span>
+          <span class="ur-text">GitHub سے مفت ویب سائٹ ہوسٹنگ، سرور کنفگ کی ضرورت نہیں۔ ۱۰ منٹ میں push سے live URL تک۔</span>
+        </p>
+      </div>
+      <a href="howto-github-pages.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+    <!-- Card: Terraform -->
+    <article class="topic-card rounded-2xl bg-white p-6 flex flex-col gap-4" data-category="devops">
+      <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center text-2xl">🏗️</div>
+      <div class="flex-1">
+        <span class="text-[10px] uppercase tracking-widest text-amber font-semibold">DevOps</span>
+        <h3 class="font-display font-semibold text-lg text-slate mt-0.5 mb-1.5">Terraform (IaC)</h3>
+        <p class="font-body text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Infrastructure as Code — describe your entire cloud setup in a text file and let Terraform build it for you.</span>
+          <span class="ur-text">بطور کوڈ انفراسٹرکچر — اپنا پورا کلاؤڈ سیٹ اپ ایک ٹیکسٹ فائل میں بیان کریں اور Terraform اسے بنائے۔</span>
+        </p>
+      </div>
+      <a href="what-is-terraform.html" class="card-btn inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate/15 text-slate text-xs font-semibold">
+        <span class="en-text">Read Simple Guide →</span><span class="ur-text">← آسان گائیڈ پڑھیں</span>
+      </a>
+    </article>
+
+  </div>
+
+  <div id="no-results" class="hidden text-center py-20">
+    <p class="text-4xl mb-4">🔭</p>
+    <p class="font-display font-semibold text-xl text-slate mb-2">
+      <span class="en-text">No articles in this category yet.</span>
+      <span class="ur-text">اس زمرے میں ابھی کوئی مضمون نہیں ہے۔</span>
+    </p>
+    <p class="text-slate-light text-sm">
+      <span class="en-text">New guides are being written — check back soon!</span>
+      <span class="ur-text">نئے گائیڈ لکھے جا رہے ہیں — جلد واپس آئیں!</span>
+    </p>
+  </div>
+</section>
+
+<!-- ROADMAPS -->
+<section id="roadmaps" class="bg-slate py-20 px-5">
+  <div class="max-w-5xl mx-auto text-center">
+    <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-2">
+      <span class="en-text">Coming Soon</span><span class="ur-text">جلد آ رہا ہے</span>
+    </p>
+    <h2 class="font-display font-bold text-3xl md:text-4xl text-white mb-4">
+      <span class="en-text">Learning Roadmaps</span><span class="ur-text">سیکھنے کے راستے</span>
+    </h2>
+    <p class="font-body text-slate-light text-base md:text-lg max-w-xl mx-auto mb-10">
+      <span class="en-text">Structured paths through the concepts — from zero to cloud architect, or from curious to ML practitioner.</span>
+      <span class="ur-text">موضوعات کے ذریعے منظم راستے — صفر سے کلاؤڈ آرکیٹیکٹ تک، یا تجسس سے ML پریکٹیشنر تک۔</span>
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
+      <div class="rounded-2xl border border-white/10 bg-white/05 p-6 hover:border-amber/40 transition-colors">
+        <div class="text-3xl mb-3">☁️</div>
+        <h3 class="font-display font-semibold text-white text-lg mb-1.5">
+          <span class="en-text">AWS Fundamentals</span><span class="ur-text">AWS کے بنیادی اصول</span>
+        </h3>
+        <p class="text-slate-light text-sm leading-relaxed">
+          <span class="en-text">S3 → EC2 → IAM → VPC → Lambda. The 5 concepts that unlock everything else in AWS.</span>
+          <span class="ur-text">S3 → EC2 → IAM → VPC → Lambda۔ وہ ۵ تصورات جو AWS میں باقی سب کھولتے ہیں۔</span>
+        </p>
+        <span class="mt-4 inline-block text-xs text-amber font-semibold border border-amber/30 px-3 py-1 rounded-full">
+          <span class="en-text">In Progress</span><span class="ur-text">جاری ہے</span>
+        </span>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/05 p-6 hover:border-amber/40 transition-colors">
+        <div class="text-3xl mb-3">🤖</div>
+        <h3 class="font-display font-semibold text-white text-lg mb-1.5">
+          <span class="en-text">GenAI from Scratch</span><span class="ur-text">جنریٹو اے آئی شروع سے</span>
+        </h3>
+        <p class="text-slate-light text-sm leading-relaxed">
+          <span class="en-text">LLMs → Embeddings → RAG → Agents → Fine-tuning. Build real AI apps step by step.</span>
+          <span class="ur-text">LLMs → Embeddings → RAG → Agents → Fine-tuning۔ قدم بہ قدم حقیقی AI ایپس بنائیں۔</span>
+        </p>
+        <span class="mt-4 inline-block text-xs text-amber font-semibold border border-amber/30 px-3 py-1 rounded-full">
+          <span class="en-text">In Progress</span><span class="ur-text">جاری ہے</span>
+        </span>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/05 p-6 hover:border-amber/40 transition-colors">
+        <div class="text-3xl mb-3">⚙️</div>
+        <h3 class="font-display font-semibold text-white text-lg mb-1.5">
+          <span class="en-text">DevOps Essentials</span><span class="ur-text">DevOps کے لوازمات</span>
+        </h3>
+        <p class="text-slate-light text-sm leading-relaxed">
+          <span class="en-text">Linux → Docker → CI/CD → Kubernetes → Terraform. The modern shipping toolkit.</span>
+          <span class="ur-text">Linux → Docker → CI/CD → Kubernetes → Terraform۔ جدید سافٹ ویئر ترسیل کا ٹول کٹ۔</span>
+        </p>
+        <span class="mt-4 inline-block text-xs text-amber font-semibold border border-amber/30 px-3 py-1 rounded-full">
+          <span class="en-text">Planned</span><span class="ur-text">منصوبہ بند</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="py-20 px-5">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex flex-col md:flex-row items-start gap-10">
+      <div class="flex-shrink-0">
+        <div class="w-20 h-20 rounded-2xl bg-amber-pale border-2 border-amber/30 flex items-center justify-center text-4xl">✍️</div>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-widest text-amber font-semibold mb-2">
+          <span class="en-text">About This Blog</span><span class="ur-text">اس بلاگ کے بارے میں</span>
+        </p>
+        <h2 class="font-display font-bold text-3xl text-slate mb-4">
+          <span class="en-text">Why Open-Concepts?</span><span class="ur-text">Open-Concepts کیوں؟</span>
+        </h2>
+        <p class="font-body text-slate-mid leading-relaxed mb-4">
+          <span class="en-text">The cloud and AI ecosystem is exploding — but most documentation is written <em>for</em> engineers <em>by</em> engineers. Open-Concepts exists to break that barrier. Every guide is written assuming you're smart, curious, and just need someone to drop the jargon.</span>
+          <span class="ur-text">کلاؤڈ اور AI ایکوسسٹم تیزی سے بڑھ رہا ہے — لیکن زیادہ تر دستاویزات انجینئرز کے لیے انجینئرز کی طرف سے لکھی جاتی ہیں۔ Open-Concepts اس رکاوٹ کو توڑنے کے لیے موجود ہے۔ ہر گائیڈ یہ فرض کر کے لکھا گیا ہے کہ آپ ذہین اور متجسس ہیں — بس کوئی پیچیدہ اصطلاح ہٹانے والا چاہیے۔</span>
+        </p>
+        <p class="font-body text-slate-mid leading-relaxed mb-6">
+          <span class="en-text">Topics cover AWS, Generative AI, Linux, and DevOps — the four pillars of modern tech infrastructure — with more added every week.</span>
+          <span class="ur-text">موضوعات میں AWS، جنریٹو AI، Linux اور DevOps شامل ہیں — جدید ٹیک انفراسٹرکچر کے چار ستون — اور ہر ہفتے مزید شامل ہوتے ہیں۔</span>
+        </p>
+        <a href="about.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors duration-200">
+          <span class="en-text">Learn more about this project →</span><span class="ur-text">اس پروجیکٹ کے بارے میں مزید جانیں ←</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span><span class="en-text">Built with ❤️ by</span><span class="ur-text">❤️ کے ساتھ بنایا</span></span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">Anwaar</span>
+        <span>· <span class="en-text">No jargon, just clarity.</span><span class="ur-text">کوئی پیچیدگی نہیں، صرف وضاحت۔</span></span>
+      </p>
+    </div>
+    <div class="flex items-center gap-5">
+      <a href="#topics" class="text-slate-light hover:text-slate text-xs transition-colors"><span class="en-text">Topics</span><span class="ur-text">موضوعات</span></a>
+      <a href="#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors"><span class="en-text">Roadmaps</span><span class="ur-text">راستے</span></a>
+      <a href="#about" class="text-slate-light hover:text-slate text-xs transition-colors"><span class="en-text">About</span><span class="ur-text">بارے میں</span></a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* Mobile menu */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* Filter pills */
+  function filterCards(category) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    const cards = document.querySelectorAll('#card-grid article');
+    let visible = 0;
+    cards.forEach(card => {
+      const cats = card.dataset.category || '';
+      const match = category === 'all' || cats.includes(category);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  /* Sticky nav */
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    nav.style.boxShadow = window.scrollY > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* ══ BILINGUAL ENGINE ══ */
+  (function() {
+    var STORAGE_KEY = 'oc_lang';
+    var current = localStorage.getItem(STORAGE_KEY) || 'en';
+
+    function applyLang(lang) {
+      current = lang;
+      var isUr = (lang === 'ur');
+      document.body.classList.toggle('urdu-mode', isUr);
+      document.documentElement.lang = isUr ? 'ur' : 'en';
+      var flag = document.getElementById('tgl-flag');
+      var lbl  = document.getElementById('tgl-label');
+      if (flag) flag.textContent = isUr ? '🇬🇧' : '🇵🇰';
+      if (lbl)  lbl.textContent  = isUr ? 'Read in English' : 'اردو میں پڑھیں';
+      localStorage.setItem(STORAGE_KEY, lang);
+    }
+
+    window.toggleLanguage = function() { applyLang(current === 'en' ? 'ur' : 'en'); };
+    document.addEventListener('DOMContentLoaded', function() { applyLang(current); });
+  })();
+</script>
+</body>
+</html>
