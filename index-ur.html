@@ -161,13 +161,23 @@
       <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
     </button>
 
-    <!-- Mechanical Language Switcher — always visible -->
-    <div class="lang-switcher" id="langSwitcher" onclick="switchLang()" title="Switch Language">
-      <div class="lang-thumb" id="langThumb"></div>
-      <span class="lang-option inactive" id="optEn" style="font-family:'DM Sans',sans-serif!important;">EN</span>
-      <div class="lang-divider"></div>
-      <span class="lang-option active"   id="optUr">اردو</span>
-    </div>
+    <!-- Language toggle — plain anchor, cannot fail -->
+    <a href="index.html" style="
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(145deg, #1a2535, #2a3a50);
+      border: 1.5px solid rgba(255,153,0,0.5); border-radius: 999px;
+      padding: 8px 18px; color: #FFB84D;
+      font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+      font-weight: 700; letter-spacing: 0.04em;
+      text-decoration: none; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    "
+    onmouseover="this.style.background='linear-gradient(145deg,#FF9900,#FFB84D)'; this.style.color='#232F3E';"
+    onmouseout="this.style.background='linear-gradient(145deg,#1a2535,#2a3a50)'; this.style.color='#FFB84D';">
+      <span style="font-family:'Noto Nastaliq Urdu',serif; font-size:0.9rem; line-height:1;">اردو</span>
+      <span style="width:1px; height:12px; background:rgba(255,153,0,0.3); display:inline-block;"></span>
+      <span style="font-size:0.7rem; opacity:0.6; font-family:'DM Sans',sans-serif;">EN</span>
+    </a>
   </div>
   <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
     <a href="#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">تمام موضوعات</a>
