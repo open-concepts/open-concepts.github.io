@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+  @font-face {
+    font-family: 'MySignature';
+    src: url('signature.ttf');
+    font-display: swap;
+  }
+  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is AWS Redshift? — Open-Concepts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:         '#FDFBF7',
+            'cream-dark':  '#F5F0E8',
+            slate:         '#232F3E',
+            'slate-mid':   '#3D4F60',
+            'slate-light': '#6B7F91',
+            amber:         '#FF9900',
+            'amber-light': '#FFB84D',
+            'amber-pale':  '#FFF3DC',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body:    ['DM Sans', 'sans-serif'],
+            mono:    ['Roboto Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #FDFBF7; color: #232F3E; overflow-x: hidden; }
+
+    /* Grain texture */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* Sticky nav */
+    #navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(253,251,247,0.88);
+      border-bottom: 1px solid rgba(35,47,62,0.08);
+    }
+
+    /* Section tabs */
+    .tab-btn {
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      border-bottom: 3px solid #FF9900;
+      color: #232F3E;
+      font-weight: 700;
+    }
+    .tab-btn:hover:not(.active) { color: #232F3E; }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    /* Analogy card */
+    .analogy-card {
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border-left: 5px solid #FF9900;
+    }
+    /* Pro card */
+    .pro-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-left: 5px solid #232F3E;
+    }
+    /* Info card */
+    .info-card {
+      border: 1.5px solid rgba(35,47,62,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(35,47,62,0.10);
+      border-color: rgba(255,153,0,0.35);
+    }
+
+    /* Badge */
+    .tier-badge {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Table */
+    .oc-table { border-collapse: collapse; width: 100%; }
+    .oc-table th {
+      background: #232F3E; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 14px; text-align: left;
+    }
+    .oc-table td {
+      padding: 10px 14px; font-size: 0.875rem; color: #3D4F60;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .oc-table tr:last-child td { border-bottom: none; }
+    .oc-table tr:nth-child(even) td { background: #F8F6F2; }
+    .oc-table tr:hover td { background: #FFF3DC; }
+
+    /* Code inline */
+    code {
+      font-family: 'Roboto Mono', monospace;
+      background: rgba(35,47,62,0.07);
+      color: #232F3E;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82em;
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    .delay-1 { animation-delay: 0.08s; }
+    .delay-2 { animation-delay: 0.16s; }
+    .delay-3 { animation-delay: 0.24s; }
+
+    /* Accent stripe */
+    .accent-stripe { background: linear-gradient(90deg, #FF9900 0%, #FFB84D 50%, #232F3E 100%); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDFBF7; }
+    ::-webkit-scrollbar-thumb { background: #D1C9BC; border-radius: 99px; }
+
+    /* Chart container */
+    .chart-container {
+      position: relative; width: 100%; max-width: 820px;
+      margin: 0 auto; height: 340px; max-height: 380px;
+      background: white; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 4px 20px rgba(35,47,62,0.08);
+      border: 1px solid #E2E8F0;
+    }
+    @media (max-width: 768px) { .chart-container { height: 260px; } }
+
+    /* Mobile menu */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+
+    /* Reading progress */
+    #read-progress {
+      position: fixed; top: 64px; left: 0; height: 3px;
+      background: linear-gradient(90deg, #FF9900, #FFB84D);
+      z-index: 49; width: 0%; transition: width 0.1s linear;
+    }
+
+    /* TOC sidebar */
+    .toc-link {
+      transition: color 0.15s, padding-left 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-link:hover, .toc-link.active {
+      color: #FF9900;
+      border-left-color: #FF9900;
+      padding-left: 8px;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative antialiased">
+
+<!-- Reading progress bar -->
+<div id="read-progress"></div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 rounded-lg bg-slate flex items-center justify-center group-hover:bg-amber transition-colors duration-200">
+        <span class="text-white font-display font-bold text-sm">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-lg tracking-tight">Open<span class="text-amber">·</span>Concepts</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7">
+      <a href="index.html#topics"   class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">All Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-mid hover:text-slate font-body text-sm font-medium transition-colors">About</a>
+      <a href="index.html#topics" class="ml-2 px-4 py-2 rounded-lg bg-slate text-white text-sm font-medium hover:bg-amber-light hover:text-slate transition-all duration-200">← All Topics</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Menu">
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-5 h-0.5 bg-slate block rounded"></span>
+      <span class="w-3.5 h-0.5 bg-slate block rounded"></span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden flex-col px-5 pb-5 pt-2 gap-3 bg-cream border-t border-slate/10">
+    <a href="index.html#topics"   onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">All Topics</a>
+    <a href="index.html#roadmaps" onclick="closeMenu()" class="py-2 text-slate font-medium border-b border-slate/10 block">Roadmaps</a>
+    <a href="index.html#about"    onclick="closeMenu()" class="py-2 text-slate font-medium block">About</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO / ARTICLE HEADER ═══════════════════ -->
+<header class="relative pt-28 pb-14 px-5 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-15 pointer-events-none"
+       style="background: radial-gradient(ellipse at center, #FF9900 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-4xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <div class="fade-up flex items-center gap-2 text-xs text-slate-light font-medium mb-5 flex-wrap">
+      <a href="index.html" class="hover:text-amber transition-colors">Home</a>
+      <span>›</span>
+      <span class="px-2 py-0.5 rounded-full bg-amber-pale text-amber border border-amber/25 text-[10px] uppercase tracking-wider font-semibold">☁️ Cloud</span>
+      <span>›</span>
+      <span class="text-slate-mid">AWS Redshift</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="fade-up delay-1 font-display font-bold text-4xl md:text-6xl text-slate leading-tight mb-4" style="letter-spacing:-0.025em;">
+      What is<br><span class="text-amber italic">AWS Redshift?</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="fade-up delay-2 font-body text-slate-mid text-lg md:text-xl max-w-2xl leading-relaxed mb-7">
+      Amazon's cloud data warehouse — explained from a total beginner asking "what even is a warehouse?" all the way to how engineers run analytics at petabyte scale.
+    </p>
+
+    <!-- Meta row -->
+    <div class="fade-up delay-3 flex flex-wrap items-center gap-4 text-sm text-slate-light">
+      <span class="flex items-center gap-1.5">📅 Updated 2026</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">⏱️ ~20 min read</span>
+      <span class="w-1 h-1 rounded-full bg-slate-light/50"></span>
+      <span class="flex items-center gap-1.5">☁️ AWS · Cloud · Analytics</span>
+    </div>
+  </div>
+</header>
+
+<div class="accent-stripe h-0.5 w-full opacity-60"></div>
+
+<!-- ═══════════════════ QUICK OVERVIEW CARDS ═══════════════════ -->
+<section class="py-10 px-5 bg-cream-dark/60">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🏛️</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Data Warehouse</p>
+      <p class="text-slate-light text-xs mt-1">Columnar, analytics-first</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">⚡</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Massively Parallel</p>
+      <p class="text-slate-light text-xs mt-1">Hundreds of nodes, one query</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">☁️</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Serverless Mode</p>
+      <p class="text-slate-light text-xs mt-1">No clusters to manage</p>
+    </div>
+    <div class="info-card bg-white rounded-2xl p-5 text-center">
+      <div class="text-3xl mb-2">🔗</div>
+      <p class="font-display font-bold text-slate text-lg leading-tight">Zero-ETL Ready</p>
+      <p class="text-slate-light text-xs mt-1">Live data, no pipelines</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-5 md:px-8 py-12 flex gap-10">
+
+  <!-- LEFT: TOC Sidebar (desktop) -->
+  <aside class="hidden xl:block w-56 flex-shrink-0">
+    <div class="sticky top-24">
+      <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-3">On this page</p>
+      <nav class="flex flex-col gap-1.5 text-sm text-slate-light font-medium">
+        <a onclick="switchTab('foundations')" class="toc-link py-0.5 cursor-pointer" data-tab="foundations">① What It Is</a>
+        <a onclick="switchTab('architecture')" class="toc-link py-0.5 cursor-pointer" data-tab="architecture">② How It Works</a>
+        <a onclick="switchTab('serverless')"   class="toc-link py-0.5 cursor-pointer" data-tab="serverless">③ Serverless vs Provisioned</a>
+        <a onclick="switchTab('zeroetl')"      class="toc-link py-0.5 cursor-pointer" data-tab="zeroetl">④ Zero-ETL</a>
+        <a onclick="switchTab('security')"     class="toc-link py-0.5 cursor-pointer" data-tab="security">⑤ Security</a>
+        <a onclick="switchTab('usecases')"     class="toc-link py-0.5 cursor-pointer" data-tab="usecases">⑥ Real-World Uses</a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Main article -->
+  <main class="flex-1 min-w-0">
+
+    <!-- ── TAB NAV ── -->
+    <div class="mb-8 border-b border-slate/10 overflow-x-auto">
+      <div class="flex gap-1 min-w-max pb-0">
+        <button onclick="switchTab('foundations')" class="tab-btn active px-3 py-2.5 rounded-t-xl text-xs text-slate-mid" data-tab="foundations">🏛️ What It Is</button>
+        <button onclick="switchTab('architecture')" class="tab-btn         px-3 py-2.5 rounded-t-xl text-xs text-slate-mid" data-tab="architecture">⚙️ How It Works</button>
+        <button onclick="switchTab('serverless')"   class="tab-btn         px-3 py-2.5 rounded-t-xl text-xs text-slate-mid" data-tab="serverless">☁️ Serverless vs Provisioned</button>
+        <button onclick="switchTab('zeroetl')"      class="tab-btn         px-3 py-2.5 rounded-t-xl text-xs text-slate-mid" data-tab="zeroetl">🔗 Zero-ETL</button>
+        <button onclick="switchTab('security')"     class="tab-btn         px-3 py-2.5 rounded-t-xl text-xs text-slate-mid" data-tab="security">🔐 Security</button>
+        <button onclick="switchTab('usecases')"     class="tab-btn         px-3 py-2.5 rounded-t-xl text-xs text-slate-mid" data-tab="usecases">🚀 Real-World Uses</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 1: WHAT IT IS ══ -->
+    <div id="tab-foundations" class="tab-panel active">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏬</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Think of a Giant Superstore for Your Data</h2>
+            <p class="text-slate-mid leading-relaxed">Imagine a regular database is like your kitchen cupboard — it stores everyday things and you grab individual items as you need them. <strong>Amazon Redshift is like a massive superstore warehouse</strong> — it stores billions of items, and instead of one person picking products, <em>hundreds of workers fan out across every aisle simultaneously</em> to answer your question in seconds. It's built for questions like "how much did we sell last year, by region, by product, compared to the year before?" — not for "update this one customer's address."</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- What is a Data Warehouse -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">❓</span> Wait — What Is a Data Warehouse?</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Before Redshift, let's understand what problem it actually solves. Businesses have two very different types of database needs:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-2 text-sm">🛒 Operational Database (OLTP)</p>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">Used for day-to-day business operations. Every time someone places an order on Amazon, that row gets written instantly. <em>"INSERT one order, UPDATE one customer."</em></p>
+            <p class="text-slate-light text-xs">Examples: MySQL, PostgreSQL, Aurora</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="font-bold text-slate mb-2 text-sm">📊 Data Warehouse (OLAP)</p>
+            <p class="text-slate-mid text-sm leading-relaxed mb-3">Used for analysis and business intelligence. <em>"Scan 10 billion rows and tell me sales trends across all countries for the last 5 years."</em> Speed of reading matters, not writing.</p>
+            <p class="text-slate-light text-xs">Examples: Redshift, BigQuery, Snowflake</p>
+          </div>
+        </div>
+        <div class="analogy-card rounded-2xl p-5 mb-4">
+          <p class="text-slate-mid text-sm leading-relaxed">🍽️ <strong>Restaurant analogy:</strong> Your kitchen (OLTP database) is optimised for cooking and serving one dish at a time, quickly. A Redshift data warehouse is like sending a full team of analysts into the restaurant's year of receipts to answer: <em>"Which dish was most profitable on rainy Tuesdays?"</em></p>
+        </div>
+      </div>
+
+      <!-- What Makes Redshift Special -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">✨</span> What Makes Redshift Special?</h2>
+        <div class="space-y-4 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-xl flex-shrink-0">📋</div>
+              <div>
+                <h3 class="font-display font-bold text-lg text-slate mb-1">Columnar Storage</h3>
+                <p class="text-slate-mid text-sm leading-relaxed">Normal databases store data row-by-row (like a spreadsheet where each row is one record). Redshift stores data <strong>column-by-column</strong>. If you ask "what is the average price of all 10 billion products?" it only reads the <em>price column</em>, skipping every other field entirely. This can be 10–100× faster for analytics.</p>
+                <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 mt-3 leading-relaxed">
+                  Row store: [name, price, qty, date] [name, price, qty, date] ...<br>
+                  Col store: [price, price, price, price, price, price...] ← only this<br>
+                  Result: Skip 75% of the data. Way faster. ⚡
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-xl flex-shrink-0">🤝</div>
+              <div>
+                <h3 class="font-display font-bold text-lg text-slate mb-1">Massively Parallel Processing (MPP)</h3>
+                <p class="text-slate-mid text-sm leading-relaxed">A query doesn't run on one computer. Redshift distributes work across <strong>many compute nodes simultaneously</strong> — each node handles a slice of the data and reports back. The more nodes, the faster your queries, regardless of dataset size.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-xl flex-shrink-0">🗜️</div>
+              <div>
+                <h3 class="font-display font-bold text-lg text-slate mb-1">Built-in Compression</h3>
+                <p class="text-slate-mid text-sm leading-relaxed">Redshift automatically compresses each column using the best algorithm for that data type. Because similar values are stored together (e.g., a price column full of numbers), they compress extremely well — often <strong>3–10× smaller</strong> than raw data. Less storage = lower cost + faster reads.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-xl flex-shrink-0">🤖</div>
+              <div>
+                <h3 class="font-display font-bold text-lg text-slate mb-1">AI-Driven Query Optimisation</h3>
+                <p class="text-slate-mid text-sm leading-relaxed">Redshift includes a built-in AI query planner that learns from past queries, automatically rewrites slow SQL, and picks the most efficient execution plan. As of 2026, Redshift Serverless even has <strong>AI-driven auto-scaling</strong> — it predicts how much compute you'll need and scales up before you even send the query.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key concepts -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📖</span> Key Terms, Simply Explained</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm">
+          <table class="oc-table">
+            <thead><tr><th>Term</th><th>What It Actually Means</th><th>Real-Life Analogy</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Cluster</strong></td><td>A group of servers Redshift uses to store and query your data</td><td>A team of workers in the warehouse</td></tr>
+              <tr><td><strong>Leader Node</strong></td><td>The brain that receives your query, plans it, and coordinates workers</td><td>The warehouse manager</td></tr>
+              <tr><td><strong>Compute Node</strong></td><td>The workers that actually scan data and return results</td><td>The warehouse staff doing the heavy lifting</td></tr>
+              <tr><td><strong>Namespace</strong></td><td>In Serverless mode — a container for your databases and users</td><td>A department in the company</td></tr>
+              <tr><td><strong>Workgroup</strong></td><td>In Serverless mode — the compute resources that run your queries</td><td>The team assigned to that department</td></tr>
+              <tr><td><strong>Snapshot</strong></td><td>A point-in-time backup of your entire cluster, stored in S3</td><td>A photograph of everything in the warehouse at that moment</td></tr>
+              <tr><td><strong>Spectrum</strong></td><td>Query S3 data directly without loading it into Redshift first</td><td>Browsing a storage room without bringing things into the showroom</td></tr>
+              <tr><td><strong>WLM</strong></td><td>Workload Management — rules for how queries queue and share resources</td><td>The checkout lane rules: express lane for small jobs, regular for big ones</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tab-foundations -->
+
+    <!-- ══ TAB 2: HOW IT WORKS ══ -->
+    <div id="tab-architecture" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏗️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">The Manager + Worker System</h2>
+            <p class="text-slate-mid leading-relaxed">When you send a SQL query to Redshift, it arrives at the <strong>Leader Node</strong> — like an order arriving at the warehouse manager's desk. The manager breaks the job into smaller tasks and sends each one to a different <strong>Compute Node</strong> (worker). Every worker scans their slice of data in parallel, then sends results back to the manager, who assembles the final answer and returns it to you. The whole process can happen in seconds even across billions of rows.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cluster anatomy -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🔬</span> Anatomy of a Redshift Cluster</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-3xl mb-3">🧠</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Leader Node</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Receives SQL queries. Parses them, builds an execution plan, and distributes work to compute nodes. Also aggregates results from all compute nodes before returning the final answer. You never talk to compute nodes directly — always the leader.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-3xl mb-3">💪</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Compute Nodes</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">The actual workhorses. Each stores a slice of your data and executes its portion of every query. You can have 1 to 128 nodes. More nodes = more parallelism = faster queries. Node types range from <code>ra3.xlplus</code> (small) to <code>ra3.16xlarge</code> (massive).</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-3xl mb-3">🗄️</p>
+            <h3 class="font-display font-semibold text-lg text-slate mb-1">Managed Storage</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">RA3 nodes separate compute from storage. Your data lives in <strong>Amazon S3-backed managed storage</strong> and scales independently — you can have 128 TB of storage with just 2 compute nodes if your queries are light.</p>
+          </div>
+        </div>
+
+        <div class="pro-card rounded-2xl p-6 mb-6">
+          <h3 class="font-display font-bold text-xl text-slate mb-3">How a Query Actually Runs</h3>
+          <div class="bg-slate rounded-xl p-4 font-mono text-xs text-green-300 leading-loose">
+            1. You run: SELECT SUM(revenue) FROM sales WHERE year = 2025;<br>
+            2. Leader Node receives query → parses → builds plan<br>
+            3. Leader splits data into "slices" → sends each to a Compute Node<br>
+            4. Node A: scans rows 1–250M   → local SUM = $412M<br>
+               Node B: scans rows 250–500M → local SUM = $389M<br>
+               Node C: scans rows 500–750M → local SUM = $421M<br>
+               Node D: scans rows 750M–1B  → local SUM = $398M<br>
+            5. Leader aggregates: $412M + $389M + $421M + $398M = $1.62B<br>
+            6. Result returned to you ✅ — in ~2 seconds, across 1 billion rows
+          </div>
+        </div>
+      </div>
+
+      <!-- Node types -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚙️</span> Node Types — Pick Your Power Level</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Node Type</th><th>vCPU</th><th>RAM</th><th>Managed Storage</th><th>Best For</th></tr></thead>
+            <tbody>
+              <tr><td><code>ra3.xlplus</code></td><td>4</td><td>32 GB</td><td>Up to 32 TB</td><td>Small–medium workloads</td></tr>
+              <tr><td><code>ra3.4xlarge</code></td><td>12</td><td>96 GB</td><td>Up to 128 TB</td><td>Medium workloads</td></tr>
+              <tr><td><code>ra3.16xlarge</code></td><td>48</td><td>384 GB</td><td>Up to 128 TB</td><td>Large-scale analytics</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-slate-light text-sm">💡 All RA3 nodes use managed storage — you pay for compute and storage <em>separately</em>, so you only scale what you actually need.</p>
+      </div>
+
+      <!-- Distribution styles -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🗺️</span> How Data Is Spread Across Nodes</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">When you load a table into Redshift, it decides how to <strong>distribute rows across nodes</strong>. The distribution style determines whether queries involving that table will be fast or slow (because slow = data has to move between nodes).</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">KEY</p>
+            <p class="font-bold text-slate mb-1 text-sm">Distribute by a Column</p>
+            <p class="text-slate-mid text-sm">Rows with the same key value go to the same node. Great for tables you often JOIN together on that key — keeps related data colocated, avoiding costly data movement.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">EVEN</p>
+            <p class="font-bold text-slate mb-1 text-sm">Spread Evenly Round-Robin</p>
+            <p class="text-slate-mid text-sm">Rows are spread evenly across all nodes regardless of values. Best for tables that aren't frequently JOINed — ensures all nodes stay balanced.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">ALL</p>
+            <p class="font-bold text-slate mb-1 text-sm">Copy to Every Node</p>
+            <p class="text-slate-mid text-sm">A full copy of the table lands on <em>every</em> node. Only practical for small lookup tables (e.g., a country code list). Eliminates all data movement for JOINs.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Snapshots & backups -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📸</span> Snapshots — Your Safety Net</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Redshift automatically takes <strong>snapshots</strong> (point-in-time backups) of your cluster and stores them encrypted in Amazon S3. Think of a snapshot as a photograph of your entire data warehouse at a specific moment — if something goes wrong, you can restore the whole warehouse, or even just a single table, from that photo.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🤖</p>
+            <h3 class="font-semibold text-slate mb-1">Automated Snapshots</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Taken automatically every 8 hours, or whenever 5 GB of data changes. Retained for 1–35 days. Enabled by default. Costs nothing extra in storage (up to your cluster's provisioned size).</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">✋</p>
+            <h3 class="font-semibold text-slate mb-1">Manual Snapshots</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">You trigger these yourself — before a risky change, before deleting a cluster, or to copy to another AWS Region for disaster recovery. They persist until <em>you</em> delete them.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-architecture -->
+
+    <!-- ══ TAB 3: SERVERLESS vs PROVISIONED ══ -->
+    <div id="tab-serverless" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏎️</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Own a Car vs. Call an Uber</h2>
+            <p class="text-slate-mid leading-relaxed"><strong>Provisioned Redshift</strong> is like owning a car — you pick the size, pay for it 24/7, and manage everything yourself. It's always ready the moment you need it, but you're paying even when it sits in the garage. <strong>Redshift Serverless</strong> is like Uber — you don't own anything, you just request a ride when you need it, pay only for the trip, and AWS handles all the fleet management.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">⚖️</span> Side-by-Side Comparison</h2>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-6">
+          <table class="oc-table">
+            <thead><tr><th>Feature</th><th>Redshift Serverless</th><th>Provisioned Cluster</th></tr></thead>
+            <tbody>
+              <tr><td>Setup time</td><td>Seconds — just configure a workgroup</td><td>Minutes — pick nodes, type, count</td></tr>
+              <tr><td>Billing model</td><td>Pay per query (RPU seconds used)</td><td>Pay per hour (nodes running 24/7)</td></tr>
+              <tr><td>Scaling</td><td>Automatic, AI-driven, instant</td><td>Manual or scheduled resize</td></tr>
+              <tr><td>When idle</td><td>Automatically pauses, you pay $0</td><td>Nodes still running, still billed</td></tr>
+              <tr><td>Max capacity control</td><td>Set an RPU cap to prevent bill shock</td><td>Fixed node count</td></tr>
+              <tr><td>Best for</td><td>Variable / unpredictable workloads, getting started</td><td>Steady, predictable, always-on workloads</td></tr>
+              <tr><td>Node management</td><td>None — AWS handles everything</td><td>You choose type + count + resize</td></tr>
+              <tr><td>Reserved pricing</td><td>Serverless Reservations available (save up to 40%)</td><td>1-year or 3-year Reserved Nodes (save 40–75%)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Serverless deep dive -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">⚡</span> Redshift Serverless — How It Actually Works</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">In Serverless mode, you work with two concepts instead of clusters and nodes:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-2 text-sm">🗂️ Namespace</p>
+            <p class="text-slate-mid text-sm leading-relaxed">A <strong>namespace</strong> holds your databases, schemas, tables, and users. It's the storage and identity side. Think of it as a department in your company — it holds all the files and employs the people, but doesn't have its own office yet.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-2 text-sm">⚙️ Workgroup</p>
+            <p class="text-slate-mid text-sm leading-relaxed">A <strong>workgroup</strong> provides the compute resources (the RPUs — Redshift Processing Units) that run your queries. It connects to a namespace. Think of it as the office space and computers rented for that department to actually do work.</p>
+          </div>
+        </div>
+
+        <!-- RPU explanation -->
+        <div class="analogy-card rounded-2xl p-5 mb-6">
+          <p class="text-slate-mid text-sm leading-relaxed">📏 <strong>What is an RPU?</strong> A Redshift Processing Unit is the measure of compute power in Serverless. You set a base RPU (minimum 8, max 512). AWS auto-scales between your base and max as query demand rises. You're billed only for the RPUs × seconds actually consumed. A workgroup that runs zero queries for an hour = $0.</p>
+        </div>
+
+        <!-- AI scaling -->
+        <div class="pro-card rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-xl flex-shrink-0">🤖</div>
+            <div>
+              <h3 class="font-display font-bold text-lg text-slate mb-1">AI-Driven Scaling & Optimisation</h3>
+              <p class="text-slate-mid text-sm leading-relaxed mb-2">Redshift Serverless uses machine learning to predict your workload patterns and pre-warm compute before query bursts hit. If your BI dashboards refresh every morning at 9 AM, Redshift learns this and has resources ready before you even open your laptop. It also automatically rewrites inefficient queries and picks the best execution plan.</p>
+              <div class="flex gap-3 flex-wrap text-xs mt-2">
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Predictive scaling</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Auto query rewrite</span>
+                <span class="px-3 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Workload-aware RPU adjustment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WLM -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🚦</span> Workload Management (WLM) — The Traffic Controller</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">In Provisioned clusters, WLM controls how queries share resources. Without WLM, one giant query from a data scientist could hog all the cluster's compute and leave the executive dashboard crawling.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🚂</p>
+            <h3 class="font-semibold text-slate mb-1">Query Queues</h3>
+            <p class="text-slate-mid text-sm">Define separate queues for different user groups. Execs get a fast lane; bulk ETL jobs go in the slow lane. Each queue gets a slice of available memory.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">📏</p>
+            <h3 class="font-semibold text-slate mb-1">Query Monitoring Rules</h3>
+            <p class="text-slate-mid text-sm">Set rules like "if a query runs for more than 60 seconds, move it to the slow queue" or "if it scans more than 1 billion rows, cancel it automatically."</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">💰</p>
+            <h3 class="font-semibold text-slate mb-1">Usage Limits</h3>
+            <p class="text-slate-mid text-sm">Set a maximum spend or compute-time cap per day/week/month. Prevents runaway queries or accidental full-cluster scans from shocking your bill.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-serverless -->
+
+    <!-- ══ TAB 4: ZERO-ETL ══ -->
+    <div id="tab-zeroetl" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🔗</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">The Pipe That Never Needed to Exist</h2>
+            <p class="text-slate-mid leading-relaxed">Traditionally, getting data from your operational databases (like Aurora or RDS) into Redshift required building an ETL pipeline — Extract, Transform, Load. This means a team writing and maintaining code that runs constantly, moving data in batches, often hours out of date. <strong>Zero-ETL eliminates that entirely.</strong> Data written to Aurora automatically appears in Redshift within seconds — no code, no pipeline, no stale data.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- What is ETL -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">❓</span> What Was the Old Problem?</h2>
+        <div class="pro-card rounded-2xl p-6 mb-5">
+          <h3 class="font-bold text-slate mb-3">The Traditional (Painful) Way:</h3>
+          <div class="bg-slate rounded-xl p-4 font-mono text-xs text-amber-light leading-loose">
+            Aurora DB (live orders) <br>
+            ↓ Extract: run queries every hour to pull new rows<br>
+            ↓ Transform: clean, join, reformat the data in Python/Glue<br>
+            ↓ Load: push processed data into Redshift<br>
+            ↓ Analyst queries Redshift... but data is already 1–4 hours old<br>
+            ↓ Pipeline breaks at 3 AM → on-call engineer paged → nightmare 😩
+          </div>
+        </div>
+        <div class="analogy-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🚰 <strong>Plumbing analogy:</strong> The old way is like manually carrying buckets of water from one tank to another every hour. Zero-ETL is like connecting them with a pipe — water just flows instantly, automatically, all the time. No buckets, no schedule, no one has to carry anything.</p>
+        </div>
+      </div>
+
+      <!-- What Zero-ETL supports -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">🔌</span> What Can Feed Into Redshift via Zero-ETL?</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🗄️</p>
+            <h3 class="font-semibold text-slate mb-1">Amazon Aurora (MySQL & PostgreSQL)</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Changes written to Aurora MySQL or PostgreSQL replicate to Redshift in near-real time. Perfect for e-commerce: every new order in your production database instantly queryable in your analytics warehouse.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🗄️</p>
+            <h3 class="font-semibold text-slate mb-1">Amazon RDS for MySQL</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Same as Aurora MySQL — your RDS production database streams changes to Redshift automatically. No Glue jobs, no Lambda functions, no custom scripts.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">⚡</p>
+            <h3 class="font-semibold text-slate mb-1">Amazon DynamoDB</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">DynamoDB (a NoSQL database) can now stream its data into Redshift. Useful for apps that store user activity or gaming scores in DynamoDB but want to run SQL analytics on top of it.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-2xl mb-2">🏢</p>
+            <h3 class="font-semibold text-slate mb-1">Enterprise Apps (Salesforce, SAP, ServiceNow, Zendesk)</h3>
+            <p class="text-slate-mid text-sm leading-relaxed">Business apps can stream their data directly into Redshift. Marketing can analyse Salesforce CRM data in Redshift using SQL — without anyone writing a single integration script.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- How it works mechanically -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">⚙️</span> How Zero-ETL Actually Works</h2>
+        <div class="space-y-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Step 1 — Enable the Integration</p>
+            <p class="text-slate-mid text-sm">In the AWS Console, you create a Zero-ETL integration between your source (e.g., Aurora cluster) and your target (Redshift data warehouse). Redshift creates a destination database automatically.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Step 2 — Initial Snapshot Sync</p>
+            <p class="text-slate-mid text-sm">Redshift takes a full snapshot of your source data and loads it. This is a one-time bulk load. For large databases, this can take some time — but it only happens once.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Step 3 — Continuous Change Capture</p>
+            <p class="text-slate-mid text-sm">After the initial load, Redshift uses Change Data Capture (CDC) to detect every INSERT, UPDATE, and DELETE in the source and apply it to the destination in near-real time. Your Redshift data is typically only seconds behind your production database.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Step 4 — Query Replicated Data Immediately</p>
+            <p class="text-slate-mid text-sm">Once data arrives in Redshift, you can query it just like any other table using standard SQL. You can also create materialized views on top of replicated data for even faster analytical queries.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Redshift Spectrum -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🌊</span> Redshift Spectrum — Query Your S3 Data Lake</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Zero-ETL brings live databases into Redshift. But what about your massive historical data sitting in S3 as CSV or Parquet files? That's where <strong>Redshift Spectrum</strong> comes in.</p>
+        <div class="analogy-card rounded-2xl p-5 mb-5">
+          <p class="text-slate-mid text-sm leading-relaxed">📚 <strong>Library analogy:</strong> Redshift Spectrum is like being able to query books on the shelf (S3) without checking them out (loading into Redshift). You walk up to any shelf in the library — your petabytes of S3 data — and read directly. The data never needs to move. You pay only for the data scanned.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-xl mb-2">📂</p>
+            <h3 class="font-semibold text-slate text-sm mb-1">Supported Formats</h3>
+            <p class="text-slate-mid text-xs">CSV, JSON, Parquet, ORC, Avro, and more. Parquet is fastest — it's columnar, just like Redshift itself.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-xl mb-2">📋</p>
+            <h3 class="font-semibold text-slate text-sm mb-1">AWS Glue Catalog</h3>
+            <p class="text-slate-mid text-xs">Spectrum uses the Glue Data Catalog as a directory of what data lives where in S3. You register your S3 paths and schema once, then query with SQL.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="text-xl mb-2">🤝</p>
+            <h3 class="font-semibold text-slate text-sm mb-1">JOIN S3 + Redshift</h3>
+            <p class="text-slate-mid text-xs">Write one SQL query that joins a Redshift table (hot, recent data) with an S3 table (cold, historical data). Redshift handles it seamlessly.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-zeroetl -->
+
+    <!-- ══ TAB 5: SECURITY ══ -->
+    <div id="tab-security" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🏦</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">The Simple Explanation</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">A Bank Vault, Not a Filing Cabinet</h2>
+            <p class="text-slate-mid leading-relaxed">A data warehouse holds some of the most sensitive data a company owns — revenue figures, customer records, transaction histories. Redshift is built like a bank vault, not a filing cabinet. By default, your cluster is locked to the entire world — nobody gets in without explicit permission. You then add layers: who can connect, what they can see, and how the data is encrypted at every step.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network security -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🌐</span> Network Security — The Outer Wall</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🔒 Private by Default</p>
+            <p class="text-slate-mid text-sm">Every Redshift cluster launches inside a VPC (Virtual Private Cloud) — your own private network section in AWS. The cluster has no public IP unless you explicitly assign one. The outside internet cannot reach it at all.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🛡️ VPC Security Groups</p>
+            <p class="text-slate-mid text-sm">Security groups act as a firewall. You write rules: "allow TCP port 5439 from this specific IP range only." Only traffic matching your rules can reach the cluster — everything else is silently dropped.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🔐 SSL/TLS Connections</p>
+            <p class="text-slate-mid text-sm">All connections between your SQL client and Redshift are encrypted in transit using SSL/TLS. Data flowing through the wire can't be intercepted and read, even on your own network.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">🔗 Enhanced VPC Routing</p>
+            <p class="text-slate-mid text-sm">Turn this on to force all traffic between Redshift and S3 to travel through your VPC — never across the public internet. Essential for compliance-heavy industries like banking and healthcare.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- IAM -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">👤</span> Identity & Access — Who Gets the Keys?</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Redshift has two layers of access control that work together:</p>
+        <div class="rounded-2xl overflow-hidden border border-slate/10 shadow-sm mb-5">
+          <table class="oc-table">
+            <thead><tr><th>Layer</th><th>What It Controls</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td><strong>AWS IAM</strong></td><td>Who can manage the cluster (create, delete, resize) via the console or API</td><td>Your DevOps engineer can resize the cluster; analysts cannot</td></tr>
+              <tr><td><strong>Database Users & Roles</strong></td><td>Who can log into the database and run SQL queries</td><td>Analyst can SELECT from sales table; cannot DROP tables</td></tr>
+              <tr><td><strong>IAM Authentication</strong></td><td>Generate temporary database credentials using IAM — no passwords to manage</td><td>Developer's IAM role auto-generates a DB password that expires in 15 min</td></tr>
+              <tr><td><strong>Identity Center (SSO)</strong></td><td>Log in with your corporate identity (Okta, Active Directory) — no separate AWS accounts needed</td><td>New employee joins, their Okta account automatically grants Redshift access</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Encryption -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">🔐</span> Encryption — Scrambling Your Data at Rest</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">AWS-Managed Keys</p>
+            <p class="font-bold text-slate mb-1 text-sm">Default Encryption</p>
+            <p class="text-slate-mid text-sm leading-relaxed">AWS generates and manages your encryption keys automatically. Your data is encrypted on disk — if someone stole the physical hard drive, it would be unreadable. Zero configuration needed.</p>
+          </div>
+          <div class="info-card bg-white rounded-2xl p-5">
+            <p class="tier-badge text-amber mb-2">Customer-Managed Keys (KMS)</p>
+            <p class="font-bold text-slate mb-1 text-sm">You Control the Keys</p>
+            <p class="text-slate-mid text-sm leading-relaxed">Using AWS KMS, you define and manage your own encryption keys. You control who can use the key, get a full audit trail of every key usage, and can revoke access instantly — useful for meeting strict compliance requirements.</p>
+          </div>
+        </div>
+        <div class="analogy-card rounded-2xl p-5">
+          <p class="text-slate-mid text-sm leading-relaxed">🔑 <strong>Important:</strong> Encryption is an <em>immutable</em> property in Provisioned Redshift. Once you create an encrypted cluster, you can't decrypt it in-place. To switch, you'd have to unload all data and reload it into a new cluster. So make the call upfront — almost always, turn encryption on.</p>
+        </div>
+      </div>
+
+      <!-- Audit logging -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold text-2xl text-slate mb-4 flex items-center gap-3"><span class="text-2xl">📋</span> Audit Logging — The Security Camera</h2>
+        <p class="text-slate-mid leading-relaxed mb-5">Redshift can log every login attempt, every SQL query run, every connection and disconnection — saving it all to S3. This is essential for compliance (SOC 2, HIPAA, PCI-DSS) and for investigating suspicious activity.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">Connection Logs</p>
+            <p class="text-slate-mid text-sm">Records every connection and disconnection: who connected, when, from which IP, and whether authentication succeeded or failed.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">User Activity Logs</p>
+            <p class="text-slate-mid text-sm">Records every SQL query run by every user. If a rogue employee exfiltrates data with a SELECT query, it's captured here.</p>
+          </div>
+          <div class="pro-card rounded-2xl p-5">
+            <p class="font-bold text-slate mb-1 text-sm">CloudTrail Integration</p>
+            <p class="text-slate-mid text-sm">All AWS API calls to manage your Redshift cluster (create, delete, modify) are recorded in CloudTrail — the organisation-wide audit log for all AWS actions.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-security -->
+
+    <!-- ══ TAB 6: REAL-WORLD USES ══ -->
+    <div id="tab-usecases" class="tab-panel">
+
+      <div class="analogy-card rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl flex-shrink-0">🌍</div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-amber font-bold mb-1">Why It Matters</p>
+            <h2 class="font-display font-bold text-2xl text-slate mb-2">Who Actually Uses Redshift?</h2>
+            <p class="text-slate-mid leading-relaxed">Amazon, Pfizer, Yelp, McDonald's, GE, and thousands of other companies use Redshift to power decisions that require looking at billions of data points. Every time a Netflix recommendation improves, a hospital optimises its supply chain, or a bank spots fraud patterns, there's often a data warehouse like Redshift behind the scenes.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Use cases -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">💡</span> Real Use Cases, Simply Explained</h2>
+        <div class="space-y-5">
+
+          <div class="pro-card rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🛒</div>
+              <div>
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 class="font-display font-bold text-xl text-slate">E-Commerce Analytics</h3>
+                  <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Retail</span>
+                </div>
+                <p class="text-slate-mid text-sm leading-relaxed mb-3">An online retailer has 10 years of transaction data — 50 billion rows. Every morning, the business team needs: "What are our top 100 products by revenue in each country, compared to last month, filtered by customer segment?" A regular database would take hours. Redshift answers in under 5 seconds, because hundreds of nodes scan 50 billion rows in parallel.</p>
+                <div class="bg-slate rounded-xl p-3 font-mono text-xs text-green-300">
+                  SELECT product, country, SUM(revenue) as rev<br>
+                  FROM sales JOIN products USING(product_id)<br>
+                  WHERE segment = 'Premium' AND year = 2025<br>
+                  GROUP BY 1,2 ORDER BY rev DESC LIMIT 100;
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pro-card rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🏥</div>
+              <div>
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 class="font-display font-bold text-xl text-slate">Healthcare Data Platform</h3>
+                  <span class="tier-badge px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Healthcare</span>
+                </div>
+                <p class="text-slate-mid text-sm leading-relaxed">A hospital network stores patient records, appointment data, and supply chain information in Aurora. Using Zero-ETL, this data flows into Redshift automatically. Administrators can ask: "Which departments are running low on supplies based on real-time patient intake today?" — and get answers from data that's only seconds old, using SQL, without anyone building a pipeline.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pro-card rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">🏦</div>
+              <div>
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 class="font-display font-bold text-xl text-slate">Financial Fraud Detection</h3>
+                  <span class="tier-badge px-2 py-1 rounded-full bg-slate/10 text-slate-mid border border-slate/15">Finance</span>
+                </div>
+                <p class="text-slate-mid text-sm leading-relaxed">A bank stores 5 years of transaction history in Redshift — trillions of rows. The fraud team runs machine learning models that query this data looking for patterns: "Find all accounts that made 3+ international transfers in under 10 minutes, in countries they've never transacted in before." Redshift Spectrum extends the search into cold S3 archives — 20 years of history — for the same SQL query.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pro-card rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-amber-pale border border-amber/25 flex items-center justify-center text-2xl flex-shrink-0">📱</div>
+              <div>
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 class="font-display font-bold text-xl text-slate">Product Analytics for Apps</h3>
+                  <span class="tier-badge px-2 py-1 rounded-full bg-amber-pale text-amber border border-amber/30">Tech / SaaS</span>
+                </div>
+                <p class="text-slate-mid text-sm leading-relaxed">A startup has a mobile app generating millions of events per day — screen views, button clicks, purchases. They store raw events in DynamoDB and stream them into Redshift Serverless via Zero-ETL. Their product team uses BI tools (like Tableau or QuickSight) connected to Redshift to ask: "What is the conversion rate from onboarding step 3 to step 4, broken down by device type and marketing campaign?" No data engineers required — Zero-ETL + Serverless handles it all.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Redshift vs regular DB chart -->
+      <div class="mb-10">
+        <h2 class="font-display font-bold text-2xl text-slate mb-5 flex items-center gap-3"><span class="text-2xl">📊</span> Redshift vs Regular Database — Speed at Scale</h2>
+        <div class="chart-container">
+          <canvas id="speedChart"></canvas>
+        </div>
+        <p class="text-slate-light text-xs text-center mt-3">Illustrative query time comparison: scanning 10 billion rows with the same SQL query</p>
+      </div>
+
+      <!-- Summary -->
+      <div class="rounded-2xl bg-slate p-8 text-white">
+        <p class="text-xs uppercase tracking-widest text-amber font-bold mb-3">Summary</p>
+        <h2 class="font-display font-bold text-2xl md:text-3xl mb-4">The Complete Redshift Picture</h2>
+        <p class="text-slate-light leading-relaxed mb-4">Mastering Redshift means understanding all six layers: <strong class="text-white">What It Is</strong> (a columnar, MPP data warehouse), <strong class="text-white">How It Works</strong> (leader nodes + compute nodes + slices), <strong class="text-white">Deployment Modes</strong> (Serverless for flexibility, Provisioned for predictability), <strong class="text-white">Zero-ETL</strong> (live data from Aurora, DynamoDB, SaaS into Redshift — no pipelines), <strong class="text-white">Security</strong> (private VPC, IAM, KMS encryption, audit logging), and <strong class="text-white">Real-World Use Cases</strong> (e-commerce, fraud detection, healthcare, product analytics).</p>
+        <p class="text-slate-light leading-relaxed">Whether you're a startup analyst querying a few gigabytes or a Fortune 500 company running petabyte-scale analytics, Redshift scales to meet you — and in 2026, it does so with less code, less maintenance, and more intelligence than ever before.</p>
+        <div class="flex flex-wrap gap-3 mt-6">
+          <a href="SagemakerAI.html" class="px-4 py-2.5 rounded-xl bg-amber text-white text-sm font-semibold hover:bg-amber-light transition-colors">Next: AWS SageMaker AI →</a>
+          <a href="AWS-S3.html" class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← AWS S3</a>
+          <a href="index.html" class="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">← All Topics</a>
+        </div>
+      </div>
+
+    </div><!-- /tab-usecases -->
+
+  </main>
+</div>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="py-10 px-5 bg-cream-dark">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-slate flex items-center justify-center">
+        <span class="text-white font-display font-bold text-xs">OC</span>
+      </div>
+      <span class="font-display font-semibold text-slate text-base">Open<span class="text-amber">·</span>Concepts</span>
+    </div>
+    <div class="mt-12 pb-8 text-center">
+      <p class="text-slate-light/70 text-sm font-medium flex items-center justify-center gap-3 flex-wrap">
+        <span>Built with ❤️ by</span>
+        <span style="font-family: 'MySignature', cursive; font-size: 4.5rem; line-height: 1; transform: rotate(-1deg); margin-top: -5px;" class="text-slate antialiased">
+          Anwaar
+        </span>
+        <span>· No jargon, just clarity.</span>
+      </p>
+    </div>
+    <div class="flex items-center gap-5">
+      <a href="index.html#topics"   class="text-slate-light hover:text-slate text-xs transition-colors">Topics</a>
+      <a href="index.html#roadmaps" class="text-slate-light hover:text-slate text-xs transition-colors">Roadmaps</a>
+      <a href="index.html#about"    class="text-slate-light hover:text-slate text-xs transition-colors">About</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  /* ── Mobile menu ── */
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  function closeMenu()  { document.getElementById('mobile-menu').classList.remove('open'); }
+
+  /* ── Reading progress bar ── */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('read-progress').style.width = (scrolled * 100) + '%';
+    const nav = document.getElementById('navbar');
+    nav.style.boxShadow = doc.scrollTop > 10 ? '0 4px 24px rgba(35,47,62,0.10)' : 'none';
+  });
+
+  /* ── Tab switching ── */
+  function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === id);
+    });
+
+    document.querySelectorAll('.toc-link').forEach(l => {
+      l.classList.toggle('active', l.dataset.tab === id);
+    });
+
+    if (id === 'usecases') renderSpeedChart();
+  }
+
+  /* ── Speed Chart ── */
+  let speedChartInstance = null;
+  function renderSpeedChart() {
+    const ctx = document.getElementById('speedChart');
+    if (!ctx) return;
+    if (speedChartInstance) speedChartInstance.destroy();
+
+    speedChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['MySQL\n(single server)', 'PostgreSQL\n(single server)', 'Redshift\n(4 nodes)', 'Redshift\n(16 nodes)', 'Redshift\n(64 nodes)'],
+        datasets: [{
+          label: 'Query time on 10 billion rows (seconds)',
+          data: [3600, 2700, 45, 12, 4],
+          backgroundColor: [
+            'rgba(107,127,145,0.7)',
+            'rgba(107,127,145,0.7)',
+            'rgba(255,153,0,0.75)',
+            'rgba(255,153,0,0.88)',
+            'rgba(255,153,0,1)',
+          ],
+          borderColor: 'transparent',
+          borderRadius: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(35,47,62,0.95)',
+            titleFont: { size: 13, family: 'DM Sans' },
+            bodyFont:  { size: 12, family: 'Roboto Mono' },
+            padding: 12,
+            callbacks: {
+              label: ctx => {
+                const s = ctx.raw;
+                if (s >= 60) return `~${Math.round(s/60)} minutes`;
+                return `~${s} seconds`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: {
+            title: { display: true, text: 'Query Time (seconds, lower = faster)', font: { weight: 'bold', size: 11 } },
+            grid: { color: '#F1EDE7' },
+            suggestedMax: 4000
+          }
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>
